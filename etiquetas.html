@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Gerador de Etiquetas</title>
+
+<style>
+body { font-family: Arial; display: flex; margin: 0; background: #f6f8fb; }
+.editor { flex: 1; padding: 30px; }
+.sidebar { width: 320px; background: white; border-left: 1px solid #ddd; padding: 20px; }
+
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+textarea, input, select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+button {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    margin: 2px;
+    font-size: 12px;
+}
+
+.btn { background: #6366f1; color: white; }
+.btn-green { background: #10b981; color: white; }
+.btn-red { background: #ef4444; color: white; }
+
+.label {
+    width: 40mm;
+    height: 40mm;
+    background: white;
+    border: 1px solid #ccc;
+    padding: 3mm;
+    box-sizing: border-box;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.nome {
+    font-weight: bold;
+    text-align: center;
+    justify-content: center;
+    display: flex;
+    flex-direction: column;
+}
+
+.completa {
+    font-size: 8pt;
+    justify-content: space-between;
+}
+
+.titulo { font-weight: bold; text-align: center; }
+
+.alert {
+    background: black;
+    color: white;
+    text-align: center;
+    font-weight: bold;
+    padding: 2px;
+}
+
+.print {
+    display: grid;
+    grid-template-columns: repeat(5, 40mm);
+    gap: 5mm;
+}
+
+.preview { display: flex; }
+
+.item {
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+}
+
+@media print {
+    .editor, .sidebar { display: none; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="editor">
+
+    <div class="card">
+
+        <input type="hidden" id="editId">
+
+        <label>Tipo</label>
+        <select id="tipo" onchange="update()">
+            <option value="texto">Texto simples</option>
+            <option value="completa">Etiqueta completa</option>
+            <option value="bolo">Bolo (automático)</option>
+        </select>
+
+        <!-- TEXTO -->
+        <div id="grupoTexto">
+            <label>Texto</label>
+            <textarea id="texto" oninput="update()"></textarea>
+
+            <label>Espaçamento</label>
+            <input type="range" id="espacamento" min="0" max="20" value="6" oninput="update()">
+        </div>
+
+        <!-- COMPLETA -->
+        <div id="grupoCompleta">
+            <label>Título</label>
+            <input id="titulo" oninput="update()">
+
+            <label>Ingredientes</label>
+            <textarea id="ingredientes" oninput="update()"></textarea>
+        </div>
+
+        <!-- BOLO -->
+        <div id="grupoBolo">
+
+            <label>Massa</label>
+            <select id="massa" onchange="update()">
+                <option>BOLO BRANCO</option>
+                <option>BOLO DE CHOCOLATE</option>
+                <option>BOLO MESCLADO</option>
+            </select>
+
+            <label>Recheio 1</label>
+            <select id="recheio1" onchange="update()"></select>
+
+            <label>Recheio 2</label>
+            <select id="recheio2" onchange="update()"></select>
+
+        </div>
+
+        <label>Nome para salvar</label>
+        <input id="nomeSalvar">
+
+        <button class="btn" onclick="gerar()">Gerar</button>
+        <button class="btn-green" onclick="salvar()">Salvar / Atualizar</button>
+        <button class="btn" onclick="limparEdicao()">Novo</button>
+        <button class="btn" onclick="window.print()">Imprimir</button>
+
+    </div>
+
+    <div class="card">
+        <h3>Preview</h3>
+        <div id="preview" class="preview"></div>
+    </div>
+
+    <div id="print" class="print"></div>
+
+</div>
+
+<div class="sidebar">
+    <h3>Salvos</h3>
+    <div id="lista"></div>
+</div>
+
+<script>
+
+// LISTA RECHEIOS
+const recheios = [
+"Leite condensado",
+"Leite condensado com coco",
+"Leite condensado com abacaxi",
+"Leite condensado com morango",
+"Leite condensado com pessego",
+"Leite condensado com ameixa",
+"Brigadeiro",
+"Creme",
+"Mousse chocolate",
+"Mousse de Leite Ninho",
+"Mousse de Morango",
+"Mousse de Maracujá",
+"Mousse de 4 leites",
+"Leite condensado com Abacaxi e Coco",
+"Floresta Negra"
+];
+
+function carregarRecheios() {
+    const r1 = document.getElementById("recheio1");
+    const r2 = document.getElementById("recheio2");
+
+    recheios.forEach(r => {
+        r1.innerHTML += `<option>${r}</option>`;
+        r2.innerHTML += `<option>${r}</option>`;
+    });
+}
+
+// CRIAR ETIQUETA
+function criarEtiqueta() {
+    const tipo = document.getElementById("tipo").value;
+    const div = document.createElement("div");
+    div.className = "label";
+
+    if (tipo === "texto") {
+        div.classList.add("nome");
+
+        const texto = document.getElementById("texto").value;
+        const espacamento = document.getElementById("espacamento").value;
+
+        div.style.gap = espacamento + "px";
+
+        div.innerHTML = texto
+            .split(/,|\n/)
+            .map(t => `<div>${t.toUpperCase()}</div>`)
+            .join("");
+    }
+
+    if (tipo === "completa") {
+        div.classList.add("completa");
+
+        div.innerHTML = `
+            <div class="titulo">${document.getElementById("titulo").value}</div>
+            <div><b>Ingredientes:</b> ${document.getElementById("ingredientes").value}</div>
+            <div class="alert">
+                ALÉRGICOS: CONTÉM DERIVADOS DO TRIGO, SOJA, LEITE E OVOS.<br>
+                Contém Glúten
+            </div>
+            <div class="alert">ALTO EM: GORDURA SATURADA</div>
+        `;
+    }
+
+    if (tipo === "bolo") {
+        div.classList.add("nome");
+
+        const massa = document.getElementById("massa").value;
+        const r1 = document.getElementById("recheio1").value;
+        const r2 = document.getElementById("recheio2").value;
+
+        const espacamento = document.getElementById("espacamento").value;
+        div.style.gap = espacamento + "px";
+
+        div.innerHTML = `
+            <div>${massa}</div>
+            <div>${r1}</div>
+            <div>${r2}</div>
+        `;
+    }
+
+    ajustarFonte(div);
+    return div;
+}
+
+function ajustarFonte(el) {
+    let size = 14;
+    el.style.fontSize = size + "pt";
+
+    while (el.scrollHeight > el.clientHeight && size > 6) {
+        size--;
+        el.style.fontSize = size + "pt";
+    }
+}
+
+function update() {
+    const preview = document.getElementById("preview");
+    preview.innerHTML = "";
+    preview.appendChild(criarEtiqueta());
+
+    const tipo = document.getElementById("tipo").value;
+
+    document.getElementById("grupoTexto").style.display = tipo === "texto" ? "block" : "none";
+    document.getElementById("grupoCompleta").style.display = tipo === "completa" ? "block" : "none";
+    document.getElementById("grupoBolo").style.display = tipo === "bolo" ? "block" : "none";
+}
+
+function gerar() {
+    const area = document.getElementById("print");
+    area.innerHTML = "";
+
+    for (let i = 0; i < 20; i++) {
+        area.appendChild(criarEtiqueta());
+    }
+}
+
+function salvar() {
+    let lista = JSON.parse(localStorage.getItem("etiquetas")) || [];
+    const id = document.getElementById("editId").value;
+
+    const dados = {
+        id: id ? Number(id) : Date.now(),
+        nome: document.getElementById("nomeSalvar").value || "Sem nome",
+        tipo: document.getElementById("tipo").value,
+        texto: document.getElementById("texto").value,
+        titulo: document.getElementById("titulo").value,
+        ingredientes: document.getElementById("ingredientes").value,
+        massa: document.getElementById("massa").value,
+        recheio1: document.getElementById("recheio1").value,
+        recheio2: document.getElementById("recheio2").value,
+        espacamento: document.getElementById("espacamento").value
+    };
+
+    if (id) {
+        lista = lista.map(i => i.id == id ? dados : i);
+    } else {
+        lista.push(dados);
+    }
+
+    localStorage.setItem("etiquetas", JSON.stringify(lista));
+    limparEdicao();
+    carregar();
+}
+
+function carregar() {
+    let lista = JSON.parse(localStorage.getItem("etiquetas")) || [];
+    const div = document.getElementById("lista");
+    div.innerHTML = "";
+
+    lista.forEach(item => {
+        const el = document.createElement("div");
+        el.className = "item";
+
+        el.innerHTML = `
+            <b>${item.nome}</b><br>
+            <small>${item.tipo}</small><br>
+            <button onclick="event.stopPropagation(); editar(${item.id})">Editar</button>
+            <button onclick="event.stopPropagation(); duplicar(${item.id})">Duplicar</button>
+            <button onclick="event.stopPropagation(); excluir(${item.id})">Excluir</button>
+        `;
+
+        div.appendChild(el);
+    });
+}
+
+function editar(id) {
+    let lista = JSON.parse(localStorage.getItem("etiquetas")) || [];
+    const item = lista.find(i => i.id == id);
+
+    document.getElementById("editId").value = item.id;
+    document.getElementById("nomeSalvar").value = item.nome;
+    document.getElementById("tipo").value = item.tipo;
+    document.getElementById("texto").value = item.texto || "";
+    document.getElementById("titulo").value = item.titulo || "";
+    document.getElementById("ingredientes").value = item.ingredientes || "";
+    document.getElementById("massa").value = item.massa || "";
+    document.getElementById("recheio1").value = item.recheio1 || "";
+    document.getElementById("recheio2").value = item.recheio2 || "";
+    document.getElementById("espacamento").value = item.espacamento || 6;
+
+    update();
+}
+
+function duplicar(id) {
+    let lista = JSON.parse(localStorage.getItem("etiquetas")) || [];
+    const item = lista.find(i => i.id == id);
+
+    lista.push({
+        ...item,
+        id: Date.now(),
+        nome: item.nome + " (cópia)"
+    });
+
+    localStorage.setItem("etiquetas", JSON.stringify(lista));
+    carregar();
+}
+
+function excluir(id) {
+    let lista = JSON.parse(localStorage.getItem("etiquetas")) || [];
+    lista = lista.filter(i => i.id != id);
+    localStorage.setItem("etiquetas", JSON.stringify(lista));
+    carregar();
+}
+
+function limparEdicao() {
+    document.getElementById("editId").value = "";
+    document.getElementById("nomeSalvar").value = "";
+}
+
+// INIT
+carregarRecheios();
+update();
+carregar();
+
+</script>
+
+</body>
+</html>
