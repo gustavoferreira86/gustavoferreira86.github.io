@@ -2,102 +2,108 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Gerador de Etiquetas - Versão Final</title>
+    <title>Gerador de Etiquetas 40x40 - Editor Pró</title>
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; display: flex; margin: 0; background: #f0f2f5; height: 100vh; color: #333; }
-        
-        .editor { flex: 1; padding: 25px; overflow-y: auto; }
+        :root { --primary: #6366f1; --bg: #f0f2f5; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; display: flex; margin: 0; background: var(--bg); height: 100vh; }
+
+        /* Painéis */
+        .editor { flex: 1; padding: 20px; overflow-y: auto; }
         .sidebar { width: 320px; background: white; border-left: 1px solid #ddd; padding: 20px; overflow-y: auto; }
-
-        .card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        h2, h3 { margin-top: 0; color: #1a1a1a; }
-
-        label { display: block; font-size: 13px; font-weight: bold; margin: 10px 0 4px; color: #666; }
-        input, textarea, select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; font-size: 14px; }
+        .card { background: white; padding: 15px; margin-bottom: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         
-        .btn { padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; margin-top: 10px; }
-        .btn-primary { background: #6366f1; color: white; }
-        .btn-success { background: #10b981; color: white; }
-        .btn-print { background: #111; color: white; width: 100%; margin-top: 20px; }
+        /* Controles */
+        label { display: block; font-size: 11px; font-weight: bold; color: #666; margin-top: 10px; text-transform: uppercase; }
+        input, textarea, select { width: 100%; padding: 8px; margin-top: 4px; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; font-size: 14px; }
+        
+        .toolbar { display: flex; gap: 5px; margin-top: 10px; flex-wrap: wrap; }
+        .tool-btn { flex: 1; padding: 8px; border: 1px solid #ccc; background: white; cursor: pointer; border-radius: 4px; font-weight: bold; }
+        .tool-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 
-        /* Estilo da Etiqueta */
+        .btn { padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; width: 100%; transition: 0.2s; }
+        .btn-save { background: #10b981; color: white; }
+        .btn-print { background: #111; color: white; }
+
+        /* Etiqueta 40x40 */
+        #preview-container { display: flex; justify-content: center; padding: 20px; background: #e2e8f0; border-radius: 8px; }
         .label {
-            width: 40mm; height: 40mm; border: 1px solid #000; padding: 3mm;
-            box-sizing: border-box; display: flex; flex-direction: column;
-            background: white; overflow: hidden; position: relative;
+            width: 40mm; height: 40mm; padding: 2mm; box-sizing: border-box;
+            display: flex; flex-direction: column; background: white; overflow: hidden;
+            border: 1px solid #000; position: relative; line-height: 1.2;
         }
 
-        .nome { text-align: center; font-weight: bold; justify-content: center; text-transform: uppercase; }
-        
-        /* Layout Bolo: Cima, Meio, Baixo */
-        .layout-bolo {
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between; /* Espalha Topo, Centro e Base */
-            text-align: center;
-            text-transform: uppercase;
-            font-weight: bold;
-        }
-
+        /* Layouts de Conteúdo */
+        .content-texto { height: 100%; display: flex; flex-direction: column; }
+        .content-bolo { height: 100%; display: flex; flex-direction: column; justify-content: space-between; }
         .completa { font-size: 8pt; justify-content: space-between; }
-        .alert { background: black; color: white; text-align: center; font-weight: bold; padding: 2px; font-size: 7pt; margin-top: 2px; }
+        .alert { background: black; color: white; text-align: center; font-weight: bold; padding: 1px; font-size: 7pt; margin-top: 1px; }
 
-        .print-area { display: grid; grid-template-columns: repeat(5, 40mm); gap: 5mm; margin-top: 20px; }
-
-        .item-salvo { background: #f9f9f9; padding: 12px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 10px; cursor: pointer; position: relative; }
-        .item-salvo:hover { border-color: #6366f1; background: #f5f7ff; }
-        .btn-del { background: #ff4d4d; color: white; border: none; padding: 2px 8px; border-radius: 4px; position: absolute; right: 8px; top: 8px; cursor: pointer; }
+        /* Estilos de Texto Dinâmicos */
+        .bold { font-weight: bold; }
+        .italic { font-style: italic; }
 
         @media print {
-            .editor, .sidebar { display: none !important; }
+            @page { size: 40mm 40mm; margin: 0; }
             body { background: white; }
-            .label { border: 1px solid #000; }
+            .editor, .sidebar { display: none !important; }
+            #printArea { display: block !important; }
+            .label { border: none !important; page-break-after: always; }
         }
+
+        /* Lista de Salvos */
+        .item-salvo { background: #f9f9f9; padding: 10px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 8px; cursor: pointer; position: relative; }
+        .btn-del { background: #ff4d4d; color: white; border: none; padding: 2px 6px; border-radius: 4px; position: absolute; right: 5px; top: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="editor">
-    <h2>🏷️ Gerador de Etiquetas</h2>
-    
     <div class="card">
-        <label>Tipo de Etiqueta</label>
-        <select id="tipo" onchange="update()">
-            <option value="texto">Texto Grande</option>
-            <option value="completa">Completa (Ingredientes)</option>
-            <option value="bolo">Montagem de Bolo</option>
-        </select>
-
-        <div style="display: flex; gap: 10px;">
-            <div style="flex: 1;">
-                <label>Fonte (pt)</label>
-                <input type="number" id="fonte" value="14" oninput="update()">
-            </div>
-            <div style="flex: 1; align-self: flex-end; padding-bottom: 15px;">
-                <label><input type="checkbox" id="truncar" onchange="update()"> Truncar Inteligente</label>
-            </div>
+        <h3>🎨 Editor de Etiquetas</h3>
+        
+        <label>Tipo e Fonte</label>
+        <div style="display: grid; grid-template-columns: 1.5fr 1fr 0.8fr; gap: 8px;">
+            <select id="tipo" onchange="update()">
+                <option value="texto">Texto Livre</option>
+                <option value="completa">Ingredientes</option>
+                <option value="bolo">Montagem Bolo</option>
+            </select>
+            <select id="fontFamily" onchange="update()">
+                <option value="Arial">Arial</option>
+                <option value="'Courier New'">Courier (Rústica)</option>
+                <option value="'Times New Roman'">Times</option>
+                <option value="Verdana">Verdana</option>
+                <option value="Impact">Impact</option>
+            </select>
+            <input type="number" id="fontSize" value="14" oninput="update()">
         </div>
 
+        <div class="toolbar">
+            <button class="tool-btn" id="btnBold" onclick="toggleStyle('bold')">B</button>
+            <button class="tool-btn" id="btnItalic" onclick="toggleStyle('italic')">I</button>
+            <button class="tool-btn" onclick="setAlignment('left')">⇐</button>
+            <button class="tool-btn active" id="alignCenter" onclick="setAlignment('center')">⇔</button>
+            <button class="tool-btn" onclick="setAlignment('right')">⇒</button>
+        </div>
+
+        <label><input type="checkbox" id="truncar" onchange="update()"> Truncar/Abreviar (L. Cond, Choc...)</label>
+
         <div id="grupoTexto">
-            <label>Texto</label>
-            <textarea id="texto" placeholder="Ex: BOLO DE POTE, CHOCOLATE" oninput="update()"></textarea>
+            <label>Texto da Etiqueta</label>
+            <textarea id="texto" placeholder="Texto livre..." oninput="update()"></textarea>
         </div>
 
         <div id="grupoCompleta" style="display:none">
-            <label>Título</label>
-            <input id="titulo" placeholder="Nome do Produto" oninput="update()">
+            <label>Nome do Produto</label>
+            <input id="titulo" placeholder="Título" oninput="update()">
             <label>Ingredientes</label>
-            <textarea id="ingredientes" placeholder="Lista de ingredientes..." oninput="update()"></textarea>
+            <textarea id="ingredientes" placeholder="Ingredientes..." oninput="update()"></textarea>
         </div>
 
         <div id="grupoBolo" style="display:none">
             <label>Massa (Topo)</label>
             <select id="massa" onchange="update()">
-                <option>BOLO BRANCO</option>
-                <option>BOLO DE CHOCOLATE</option>
-                <option>BOLO MESCLADO</option>
-                <option>BOLO RED VELVET</option>
+                <option>BOLO BRANCO</option><option>BOLO DE CHOCOLATE</option><option>BOLO RED VELVET</option>
             </select>
             <label>Recheio 1 (Meio)</label>
             <select id="recheio1" onchange="update()"></select>
@@ -105,27 +111,25 @@
             <select id="recheio2" onchange="update()"></select>
         </div>
 
-        <div class="btn-group">
-            <button class="btn btn-success" onclick="salvar()">💾 Salvar Etiqueta</button>
-            <button class="btn btn-primary" onclick="gerarGrade()">🔄 Gerar Grade (20)</button>
-        </div>
+        <button class="btn btn-save" onclick="salvar()">💾 Salvar Etiqueta</button>
         <button class="btn btn-print" onclick="imprimir()">🖨️ Imprimir Etiquetas</button>
     </div>
 
-    <div class="card">
-        <h3>Preview</h3>
+    <div id="preview-container">
         <div id="preview"></div>
     </div>
-    <div id="printArea" class="print-area"></div>
+    
+    <div id="printArea"></div>
 </div>
 
 <aside class="sidebar">
-    <h3>📂 Minhas Etiquetas</h3>
+    <h3>📂 Etiquetas Salvas</h3>
     <div id="listaSalvos"></div>
 </aside>
 
 <script>
-const recheios = ["(VAZIO)", "LEITE CONDENSADO","LEITE CONDENSADO COM COCO","BRIGADEIRO","MOUSSE DE MARACUJÁ","MOUSSE DE MORANGO","CREME DE NINHO","DOCE DE LEITE COM NOZES"];
+const recheios = ["(NENHUM)", "LEITE CONDENSADO","BRIGADEIRO","MOUSSE MARACUJÁ","NINHO","DOCE DE LEITE","MORANGO"];
+let currentStyles = { bold: false, italic: false, align: 'center' };
 
 function carregarRecheios() {
     const r1 = document.getElementById("recheio1");
@@ -136,88 +140,79 @@ function carregarRecheios() {
     });
 }
 
+function toggleStyle(style) {
+    currentStyles[style] = !currentStyles[style];
+    document.getElementById(style === 'bold' ? 'btnBold' : 'btnItalic').classList.toggle('active');
+    update();
+}
+
+function setAlignment(align) {
+    currentStyles.align = align;
+    document.querySelectorAll('.toolbar .tool-btn').forEach(b => b.classList.remove('active'));
+    // Simplificação: apenas visual
+    update();
+}
+
 function aplicarAbreviacoes(texto) {
     return texto.toUpperCase()
-        .replace(/LEITE CONDENSADO/g, "LEITE COND.")
-        .replace(/LEITE COND\./g, "L. COND.")
+        .replace(/LEITE CONDENSADO/g, "L. COND.")
         .replace(/CONDENSADO/g, "COND.")
         .replace(/MARACUJÁ/g, "MARAC.")
-        .replace(/MORANGO/g, "MORANG.")
         .replace(/CHOCOLATE/g, "CHOC.");
 }
 
 function criarEtiquetaHTML() {
     const tipo = document.getElementById("tipo").value;
-    const fonte = document.getElementById("fonte").value;
+    const font = document.getElementById("fontFamily").value;
+    const size = document.getElementById("fontSize").value;
     const truncar = document.getElementById("truncar").checked;
 
     const div = document.createElement("div");
-    div.className = "label";
-    div.style.fontSize = fonte + "pt";
+    div.className = `label ${currentStyles.bold ? 'bold' : ''} ${currentStyles.italic ? 'italic' : ''}`;
+    div.style.fontFamily = font;
+    div.style.fontSize = size + "pt";
+    div.style.textAlign = currentStyles.align;
 
     if (tipo === "texto") {
-        div.classList.add("nome");
-        let txt = document.getElementById("texto").value;
-        div.innerHTML = txt.split(/\n|,/).map(t => `<div>${t.trim().toUpperCase()}</div>`).join("");
+        const lines = document.getElementById("texto").value.split(/\n|,/);
+        div.innerHTML = `<div class="content-texto" style="justify-content: center;">
+            ${lines.map(l => `<div>${l.trim().toUpperCase()}</div>`).join("")}
+        </div>`;
     } 
     else if (tipo === "completa") {
         div.classList.add("completa");
         div.innerHTML = `
             <div><b>${document.getElementById("titulo").value.toUpperCase()}</b></div>
-            <div style="flex-grow:1; margin: 4px 0;">${document.getElementById("ingredientes").value}</div>
-            <div class="alert">ALÉRGICOS: CONTÉM DERIVADOS DO TRIGO, SOJA, LEITE E OVOS.<br>CONTÉM GLÚTEN</div>
+            <div style="flex-grow:1; font-size: 0.9em;">${document.getElementById("ingredientes").value}</div>
+            <div class="alert">CONTÉM GLÚTEN / LACTOSE</div>
             <div class="alert">ALTO EM: GORDURA SATURADA</div>`;
     } 
     else if (tipo === "bolo") {
         const m = document.getElementById("massa").value;
         const r1 = document.getElementById("recheio1").value;
         const r2 = document.getElementById("recheio2").value;
-        
         div.innerHTML = `
-            <div class="layout-bolo">
-                <div class="topo">${m}</div>
-                <div class="meio" style="font-size:0.9em">${r1 !== '(VAZIO)' ? r1 : ''}</div>
-                <div class="baixo" style="font-size:0.9em">${r2 !== '(VAZIO)' ? r2 : ''}</div>
+            <div class="content-bolo">
+                <div>${m}</div>
+                <div style="font-weight:normal; font-size:0.85em">${r1 !== '(NENHUM)' ? r1 : ''}</div>
+                <div style="font-weight:normal; font-size:0.85em">${r2 !== '(NENHUM)' ? r2 : ''}</div>
             </div>`;
     }
 
     if (truncar) {
         setTimeout(() => {
-            // Tenta abreviar antes de cortar
             if (div.scrollHeight > div.clientHeight) {
-                const elementos = div.querySelectorAll('div');
-                elementos.forEach(el => {
-                    if (el.innerText.includes("LEITE CONDENSADO")) {
-                        el.innerText = el.innerText.replace("LEITE CONDENSADO", "LEITE COND.");
-                    }
-                });
+                div.querySelectorAll('div').forEach(el => el.innerText = aplicarAbreviacoes(el.innerText));
             }
-            // Se ainda não couber, abrevia mais
-            if (div.scrollHeight > div.clientHeight) {
-                const elementos = div.querySelectorAll('div');
-                elementos.forEach(el => el.innerText = aplicarAbreviacoes(el.innerText));
-            }
-            // Se ainda assim não couber, remove palavras (truncar clássico)
             while (div.scrollHeight > div.clientHeight) {
-                let conteudo = div.innerText.trim().split(/\s+/);
-                if (conteudo.length <= 1) break;
-                conteudo.pop();
-                div.innerText = conteudo.join(" ") + "...";
+                let txt = div.innerText.split(/\s+/);
+                if(txt.length <= 1) break;
+                txt.pop();
+                div.innerText = txt.join(" ") + "...";
             }
         }, 0);
-    } else {
-        setTimeout(() => ajustarFonte(div), 0);
     }
-
     return div;
-}
-
-function ajustarFonte(el) {
-    let size = parseInt(el.style.fontSize);
-    while (el.scrollHeight > el.clientHeight && size > 7) {
-        size--;
-        el.style.fontSize = size + "pt";
-    }
 }
 
 function update() {
@@ -225,83 +220,74 @@ function update() {
     document.getElementById("grupoTexto").style.display = tipo === "texto" ? "block" : "none";
     document.getElementById("grupoCompleta").style.display = tipo === "completa" ? "block" : "none";
     document.getElementById("grupoBolo").style.display = tipo === "bolo" ? "block" : "none";
-
+    
     const preview = document.getElementById("preview");
     preview.innerHTML = "";
     preview.appendChild(criarEtiquetaHTML());
 }
 
 function salvar() {
-    const nomeSalvo = prompt("Digite um nome para identificar esta etiqueta:", "Minha Etiqueta");
-    if (!nomeSalvo) return;
-
-    let lista = JSON.parse(localStorage.getItem("minhasEtiquetas")) || [];
-    const item = {
-        id: Date.now(),
-        identificador: nomeSalvo,
-        tipo: document.getElementById("tipo").value,
+    const nome = prompt("Nome desta configuração:", "Etiqueta " + new Date().toLocaleTimeString());
+    if (!nome) return;
+    let lista = JSON.parse(localStorage.getItem("etq_pro")) || [];
+    lista.push({
+        id: Date.now(), nome, tipo: document.getElementById("tipo").value,
         texto: document.getElementById("texto").value,
         titulo: document.getElementById("titulo").value,
         ingredientes: document.getElementById("ingredientes").value,
         massa: document.getElementById("massa").value,
         r1: document.getElementById("recheio1").value,
-        r2: document.getElementById("recheio2").value
-    };
-    lista.push(item);
-    localStorage.setItem("minhasEtiquetas", JSON.stringify(lista));
+        r2: document.getElementById("recheio2").value,
+        styles: {...currentStyles},
+        font: document.getElementById("fontFamily").value,
+        size: document.getElementById("fontSize").value
+    });
+    localStorage.setItem("etq_pro", JSON.stringify(lista));
     carregarLista();
 }
 
 function carregarLista() {
-    const lista = JSON.parse(localStorage.getItem("minhasEtiquetas")) || [];
+    const lista = JSON.parse(localStorage.getItem("etq_pro")) || [];
     const div = document.getElementById("listaSalvos");
     div.innerHTML = "";
-    lista.forEach(item => {
+    lista.reverse().forEach(item => {
         const el = document.createElement("div");
         el.className = "item-salvo";
-        el.innerHTML = `<strong>${item.identificador}</strong><button class="btn-del" onclick="excluir(${item.id}, event)">×</button>`;
-        el.onclick = () => restaurar(item);
+        el.innerHTML = `<strong>${item.nome}</strong><button class="btn-del" onclick="excluir(${item.id}, event)">×</button>`;
+        el.onclick = () => {
+            document.getElementById("tipo").value = item.tipo;
+            document.getElementById("texto").value = item.texto;
+            document.getElementById("titulo").value = item.titulo;
+            document.getElementById("ingredientes").value = item.ingredientes;
+            document.getElementById("massa").value = item.massa;
+            document.getElementById("recheio1").value = item.r1;
+            document.getElementById("recheio2").value = item.r2;
+            document.getElementById("fontFamily").value = item.font || "Arial";
+            document.getElementById("fontSize").value = item.size || 14;
+            currentStyles = item.styles || {bold:false, italic:false, align:'center'};
+            update();
+        };
         div.appendChild(el);
     });
 }
 
-function restaurar(item) {
-    document.getElementById("tipo").value = item.tipo;
-    document.getElementById("texto").value = item.texto;
-    document.getElementById("titulo").value = item.titulo;
-    document.getElementById("ingredientes").value = item.ingredientes;
-    document.getElementById("massa").value = item.massa;
-    document.getElementById("recheio1").value = item.r1;
-    document.getElementById("recheio2").value = item.r2;
-    update();
-}
-
-function excluir(id, event) {
-    event.stopPropagation();
-    let lista = JSON.parse(localStorage.getItem("minhasEtiquetas")) || [];
-    lista = lista.filter(i => i.id !== id);
-    localStorage.setItem("minhasEtiquetas", JSON.stringify(lista));
+function excluir(id, e) {
+    e.stopPropagation();
+    let lista = JSON.parse(localStorage.getItem("etq_pro")).filter(i => i.id !== id);
+    localStorage.setItem("etq_pro", JSON.stringify(lista));
     carregarLista();
 }
 
-function gerarGrade() {
-    const area = document.getElementById("printArea");
-    area.innerHTML = "";
-    for (let i = 0; i < 20; i++) { area.appendChild(criarEtiquetaHTML()); }
-}
-
 function imprimir() {
-    const qtd = prompt("Quantas etiquetas?", "20");
+    const qtd = prompt("Quantas etiquetas imprimir?", "1");
     if (!qtd) return;
     const area = document.getElementById("printArea");
     area.innerHTML = "";
     for (let i = 0; i < qtd; i++) { area.appendChild(criarEtiquetaHTML()); }
-    setTimeout(() => window.print(), 300);
+    setTimeout(() => window.print(), 600);
 }
 
-carregarRecheios();
-carregarLista();
-update();
+carregarRecheios(); carregarLista(); update();
 </script>
 </body>
 </html>
