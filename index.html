@@ -2,196 +2,164 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador Profissional de Etiquetas</title>
-
+    <title>Gerador de Etiquetas Profissional</title>
     <style>
-        :root {
-            --primary: #6366f1;
-            --bg: #f8fafc;
-            --border: #e2e8f0;
-            --label-size: 40mm;
-        }
+        body { font-family: 'Segoe UI', Arial, sans-serif; display: flex; margin: 0; background: #f0f2f5; height: 100vh; color: #333; }
+        
+        /* Layout */
+        .editor { flex: 1; padding: 25px; overflow-y: auto; }
+        .sidebar { width: 320px; background: white; border-left: 1px solid #ddd; padding: 20px; overflow-y: auto; }
 
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; margin: 0; background: var(--bg); color: #1e293b; height: 100vh; }
+        .card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        h2, h3 { margin-top: 0; color: #1a1a1a; }
 
-        /* Interface Layout */
-        .editor { flex: 1; padding: 30px; overflow-y: auto; }
-        .sidebar { width: 320px; background: white; border-left: 1px solid var(--border); padding: 20px; box-shadow: -2px 0 10px rgba(0,0,0,0.05); }
+        label { display: block; font-size: 13px; font-weight: bold; margin: 10px 0 4px; color: #666; }
+        input, textarea, select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; font-size: 14px; }
+        
+        .btn { padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; margin-top: 10px; }
+        .btn-primary { background: #6366f1; color: white; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-print { background: #111; color: white; width: 100%; margin-top: 20px; }
 
-        .card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        h3 { margin-top: 0; font-size: 1.1rem; color: #0f172a; }
-
-        label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #64748b; }
-        input, textarea, select {
-            width: 100%; padding: 10px; margin-bottom: 12px; border-radius: 8px;
-            border: 1px solid var(--border); box-sizing: border-box; font-size: 14px;
-        }
-        input:focus, textarea:focus { outline: 2px solid #6366f122; border-color: var(--primary); }
-
-        .btn-group { display: flex; gap: 8px; }
-        button { flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: #4f46e5; }
-        .btn-outline { background: #f1f5f9; color: #475569; }
-
-        /* Estilo da Etiqueta */
+        /* Etiqueta */
         .label {
-            width: var(--label-size);
-            height: var(--label-size);
-            border: 1px solid #eee; /* Cor leve para o preview */
-            padding: 3mm;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            background: white;
-            overflow: hidden;
-            line-height: 1.2;
-            color: black;
+            width: 40mm; height: 40mm; border: 1px solid #000; padding: 3mm;
+            box-sizing: border-box; display: flex; flex-direction: column;
+            background: white; overflow: hidden; position: relative;
         }
-
         .nome { text-align: center; font-weight: bold; justify-content: center; text-transform: uppercase; }
         .completa { font-size: 8pt; justify-content: space-between; }
-        .completa b { display: block; margin-bottom: 2px; font-size: 1.1em; }
+        .alert { background: black; color: white; text-align: center; font-weight: bold; padding: 2px; font-size: 7pt; margin-top: 2px; }
 
-        .alert {
-            background: black;
-            color: white;
-            text-align: center;
-            font-weight: bold;
-            padding: 2px;
-            font-size: 6.5pt;
-            border-radius: 2px;
-            margin-top: 2px;
-        }
+        /* Grid de Impressão */
+        .print-area { display: grid; grid-template-columns: repeat(5, 40mm); gap: 5mm; margin-top: 20px; }
 
-        /* Preview vs Print */
-        #preview { display: flex; justify-content: center; padding: 10px; }
-        .print-area { display: grid; grid-template-columns: repeat(auto-fill, 40mm); gap: 5mm; margin-top: 20px; }
+        /* Itens Salvos */
+        .item-salvo { background: #f9f9f9; padding: 12px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 10px; cursor: pointer; position: relative; }
+        .item-salvo:hover { border-color: #6366f1; background: #f5f7ff; }
+        .btn-del { background: #ff4d4d; color: white; border: none; padding: 2px 8px; border-radius: 4px; position: absolute; right: 8px; top: 8px; cursor: pointer; }
 
         @media print {
             .editor, .sidebar { display: none !important; }
             body { background: white; }
-            .label { border: 1px solid #ddd; } /* Linha de corte na impressão */
-            .print-area { display: grid !important; }
+            .label { border: 1px solid #ccc; }
         }
     </style>
 </head>
-
 <body>
 
 <div class="editor">
+    <h2>🏷️ Gerador de Etiquetas</h2>
+    
     <div class="card">
-        <h3>Configurações da Etiqueta</h3>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <div>
-                <label>Tipo de Etiqueta</label>
-                <select id="tipo">
-                    <option value="texto">Texto Simples</option>
-                    <option value="completa">Composição / Alergênicos</option>
-                    <option value="bolo">Montagem de Bolo</option>
-                </select>
+        <label>Tipo de Etiqueta</label>
+        <select id="tipo" onchange="update()">
+            <option value="texto">Texto Grande</option>
+            <option value="completa">Completa (Ingredientes)</option>
+            <option value="bolo">Montagem de Bolo</option>
+        </select>
+
+        <div style="display: flex; gap: 10px;">
+            <div style="flex: 1;">
+                <label>Fonte (pt)</label>
+                <input type="number" id="fonte" value="14" oninput="update()">
             </div>
-            <div>
-                <label>Fonte Base (pt)</label>
-                <input type="number" id="fonte" value="14">
+            <div style="flex: 1; align-self: flex-end; padding-bottom: 15px;">
+                <label style="display: inline;"><input type="checkbox" id="truncar" onchange="update()"> Truncar Texto</label>
             </div>
         </div>
 
         <div id="grupoTexto">
-            <label>Conteúdo (use vírgula ou enter para quebrar)</label>
-            <textarea id="texto" placeholder="Ex: BOLO DE POTE, CHOCOLATE" rows="3"></textarea>
+            <label>Texto (use vírgula ou Enter)</label>
+            <textarea id="texto" placeholder="Ex: BOLO DE POTE, CHOCOLATE" oninput="update()"></textarea>
         </div>
 
         <div id="grupoCompleta" style="display:none">
-            <label>Nome do Produto</label>
-            <input id="titulo" placeholder="Ex: Brownie de Nozes">
+            <label>Título</label>
+            <input id="titulo" placeholder="Nome do Produto" oninput="update()">
             <label>Ingredientes</label>
-            <textarea id="ingredientes" placeholder="Farinha, açúcar, ovos..." rows="2"></textarea>
+            <textarea id="ingredientes" placeholder="Lista de ingredientes..." oninput="update()"></textarea>
         </div>
 
         <div id="grupoBolo" style="display:none">
             <label>Massa</label>
-            <select id="massa">
+            <select id="massa" onchange="update()">
                 <option>BOLO BRANCO</option>
                 <option>BOLO DE CHOCOLATE</option>
-                <option>BOLO RED VELVET</option>
+                <option>BOLO MESCLADO</option>
             </select>
             <label>Recheio 1</label>
-            <select id="recheio1"></select>
+            <select id="recheio1" onchange="update()"></select>
             <label>Recheio 2</label>
-            <select id="recheio2"></select>
+            <select id="recheio2" onchange="update()"></select>
         </div>
 
         <div class="btn-group">
-            <button class="btn-primary" onclick="imprimir()">🖨️ Imprimir</button>
-            <button class="btn-outline" onclick="limpar()">🧹 Limpar</button>
+            <button class="btn btn-success" onclick="salvar()">💾 Salvar na Lista</button>
+            <button class="btn btn-primary" onclick="gerarGrade()">🔄 Gerar Grade (20)</button>
         </div>
+        <button class="btn btn-print" onclick="imprimir()">🖨️ Imprimir Etiquetas</button>
     </div>
 
-    <div id="print" class="print-area"></div>
-</div>
-
-<div class="sidebar">
     <div class="card">
-        <h3>Preview Unitário</h3>
+        <h3>Preview</h3>
         <div id="preview"></div>
-        <div style="margin-top:10px">
-            <label><input type="checkbox" id="truncar"> Bloquear Redução de Fonte</label>
-        </div>
     </div>
+
+    <div id="printArea" class="print-area"></div>
 </div>
+
+<aside class="sidebar">
+    <h3>📂 Etiquetas Salvas</h3>
+    <div id="listaSalvos"></div>
+</aside>
 
 <script>
-const recheios = ["(NENHUM)", "LEITE CONDENSADO", "NINHO", "BRIGADEIRO", "MARACUJÁ", "MORANGO", "DOCE DE LEITE", "NOZES"];
+const recheios = ["LEITE CONDENSADO","LEITE CONDENSADO COM COCO","BRIGADEIRO","MOUSSE DE MARACUJÁ","MOUSSE DE MORANGO","CREME","NINHO","DOCE DE LEITE"];
 
-function carregarCampos() {
+function carregarRecheios() {
     const r1 = document.getElementById("recheio1");
     const r2 = document.getElementById("recheio2");
     recheios.forEach(r => {
-        r1.innerHTML += `<option value="${r}">${r}</option>`;
-        r2.innerHTML += `<option value="${r}">${r}</option>`;
+        r1.innerHTML += `<option>${r}</option>`;
+        r2.innerHTML += `<option>${r}</option>`;
     });
 }
 
 function criarEtiquetaHTML() {
     const tipo = document.getElementById("tipo").value;
-    const fonteBase = document.getElementById("fonte").value;
+    const fonte = document.getElementById("fonte").value;
     const truncar = document.getElementById("truncar").checked;
 
     const div = document.createElement("div");
     div.className = "label";
-    div.style.fontSize = fonteBase + "pt";
+    div.style.fontSize = fonte + "pt";
 
     if (tipo === "texto") {
         div.classList.add("nome");
-        const val = document.getElementById("texto").value.toUpperCase();
-        div.innerHTML = val.split(/,|\n/).filter(t => t.trim()).map(t => `<div>${t.trim()}</div>`).join("");
+        const texto = document.getElementById("texto").value.toUpperCase();
+        div.innerHTML = texto.split(/\n|,/).map(t => `<div>${t.trim()}</div>`).join("");
     } 
     else if (tipo === "completa") {
         div.classList.add("completa");
         div.innerHTML = `
             <div><b>${document.getElementById("titulo").value.toUpperCase()}</b></div>
-            <div style="flex:1">${document.getElementById("ingredientes").value}</div>
-            <div class="alert">ALÉRGICOS: CONTÉM TRIGO, LEITE E OVOS. CONTÉM GLÚTEN</div>
+            <div style="flex-grow:1; margin: 4px 0;">${document.getElementById("ingredientes").value}</div>
+            <div class="alert">ALÉRGICOS: CONTÉM DERIVADOS DO TRIGO, SOJA, LEITE E OVOS.<br>CONTÉM GLÚTEN</div>
             <div class="alert">ALTO EM: GORDURA SATURADA</div>`;
     } 
     else if (tipo === "bolo") {
         div.classList.add("nome");
-        const m = document.getElementById("massa").value;
-        const r1 = document.getElementById("recheio1").value;
-        const r2 = document.getElementById("recheio2").value;
-        
-        let html = `<div>${m}</div>`;
-        if(r1 !== "(NENHUM)") html += `<div style="font-weight:normal; font-size:0.9em">${r1}</div>`;
-        if(r2 !== "(NENHUM)") html += `<div style="font-weight:normal; font-size:0.9em">${r2}</div>`;
-        div.innerHTML = html;
+        div.innerHTML = `
+            <div>${document.getElementById("massa").value}</div>
+            <div style="font-weight:normal; font-size:0.9em">${document.getElementById("recheio1").value}</div>
+            <div style="font-weight:normal; font-size:0.9em">${document.getElementById("recheio2").value}</div>`;
     }
 
-    // Só ajusta se estiver fora do DOM de impressão imediata para não quebrar o loop
-    if (!truncar) {
-        // Delay técnico para o navegador calcular o scrollHeight corretamente
+    // Lógica de Truncar vs Ajustar Fonte
+    if (truncar) {
+        setTimeout(() => truncarTexto(div), 0);
+    } else {
         setTimeout(() => ajustarFonte(div), 0);
     }
 
@@ -200,13 +168,23 @@ function criarEtiquetaHTML() {
 
 function ajustarFonte(el) {
     let size = parseInt(el.style.fontSize);
-    while ((el.scrollHeight > el.clientHeight || el.scrollWidth > el.clientWidth) && size > 6) {
+    while (el.scrollHeight > el.clientHeight && size > 7) {
         size--;
         el.style.fontSize = size + "pt";
     }
 }
 
-function updateUI() {
+function truncarTexto(el) {
+    // Remove palavras inteiras até caber, para não perder o sentido cortando letras
+    while (el.scrollHeight > el.clientHeight) {
+        let conteudo = el.innerText.trim().split(/\s+/);
+        if (conteudo.length <= 1) break;
+        conteudo.pop();
+        el.innerText = conteudo.join(" ") + "...";
+    }
+}
+
+function update() {
     const tipo = document.getElementById("tipo").value;
     document.getElementById("grupoTexto").style.display = tipo === "texto" ? "block" : "none";
     document.getElementById("grupoCompleta").style.display = tipo === "completa" ? "block" : "none";
@@ -217,37 +195,80 @@ function updateUI() {
     preview.appendChild(criarEtiquetaHTML());
 }
 
-function imprimir() {
-    const qtd = prompt("Quantas etiquetas deseja gerar?", "20");
-    if (!qtd || isNaN(qtd)) return;
+// SALVAMENTO (LOCALSTORAGE)
+function salvar() {
+    let lista = JSON.parse(localStorage.getItem("minhasEtiquetas")) || [];
+    const item = {
+        id: Date.now(),
+        tipo: document.getElementById("tipo").value,
+        texto: document.getElementById("texto").value,
+        titulo: document.getElementById("titulo").value,
+        ingredientes: document.getElementById("ingredientes").value,
+        massa: document.getElementById("massa").value,
+        r1: document.getElementById("recheio1").value,
+        r2: document.getElementById("recheio2").value
+    };
+    lista.push(item);
+    localStorage.setItem("minhasEtiquetas", JSON.stringify(lista));
+    carregarLista();
+}
 
-    const area = document.getElementById("print");
+function carregarLista() {
+    const lista = JSON.parse(localStorage.getItem("minhasEtiquetas")) || [];
+    const div = document.getElementById("listaSalvos");
+    div.innerHTML = "";
+    lista.forEach(item => {
+        const el = document.createElement("div");
+        el.className = "item-salvo";
+        const resumo = item.titulo || item.texto.substring(0, 20) || item.massa;
+        el.innerHTML = `<strong>${resumo}</strong><button class="btn-del" onclick="excluir(${item.id}, event)">×</button>`;
+        el.onclick = () => restaurar(item);
+        div.appendChild(el);
+    });
+}
+
+function restaurar(item) {
+    document.getElementById("tipo").value = item.tipo;
+    document.getElementById("texto").value = item.texto;
+    document.getElementById("titulo").value = item.titulo;
+    document.getElementById("ingredientes").value = item.ingredientes;
+    document.getElementById("massa").value = item.massa;
+    document.getElementById("recheio1").value = item.r1;
+    document.getElementById("recheio2").value = item.r2;
+    update();
+}
+
+function excluir(id, event) {
+    event.stopPropagation();
+    let lista = JSON.parse(localStorage.getItem("minhasEtiquetas")) || [];
+    lista = lista.filter(i => i.id !== id);
+    localStorage.setItem("minhasEtiquetas", JSON.stringify(lista));
+    carregarLista();
+}
+
+function gerarGrade() {
+    const area = document.getElementById("printArea");
     area.innerHTML = "";
-
-    for (let i = 0; i < parseInt(qtd); i++) {
+    for (let i = 0; i < 20; i++) {
         area.appendChild(criarEtiquetaHTML());
     }
-
-    // Espera um pouco para o ajuste de fonte processar antes de abrir a tela de print
-    setTimeout(() => window.print(), 500);
 }
 
-function limpar() {
-    if(confirm("Limpar todos os campos?")) {
-        document.querySelectorAll('textarea, input').forEach(i => { if(i.type !== 'number') i.value = "" });
-        updateUI();
+function imprimir() {
+    const qtd = prompt("Quantas etiquetas?", "20");
+    if (!qtd) return;
+    const area = document.getElementById("printArea");
+    area.innerHTML = "";
+    for (let i = 0; i < qtd; i++) {
+        area.appendChild(criarEtiquetaHTML());
     }
+    setTimeout(() => window.print(), 300);
 }
 
-// Event Listeners Dinâmicos
-document.querySelectorAll('input, textarea, select').forEach(el => {
-    el.addEventListener('input', updateUI);
-});
-
-// Inicialização
-carregarCampos();
-updateUI();
+// Início
+carregarRecheios();
+carregarLista();
+update();
 </script>
-
 </body>
 </html>
