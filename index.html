@@ -2,11 +2,10 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Gerador de Etiquetas Profissional</title>
+    <title>Gerador de Etiquetas - Versão Final</title>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; display: flex; margin: 0; background: #f0f2f5; height: 100vh; color: #333; }
         
-        /* Layout */
         .editor { flex: 1; padding: 25px; overflow-y: auto; }
         .sidebar { width: 320px; background: white; border-left: 1px solid #ddd; padding: 20px; overflow-y: auto; }
 
@@ -21,20 +20,31 @@
         .btn-success { background: #10b981; color: white; }
         .btn-print { background: #111; color: white; width: 100%; margin-top: 20px; }
 
-        /* Etiqueta */
+        /* Estilo da Etiqueta */
         .label {
             width: 40mm; height: 40mm; border: 1px solid #000; padding: 3mm;
             box-sizing: border-box; display: flex; flex-direction: column;
             background: white; overflow: hidden; position: relative;
         }
+
         .nome { text-align: center; font-weight: bold; justify-content: center; text-transform: uppercase; }
+        
+        /* Layout Bolo: Cima, Meio, Baixo */
+        .layout-bolo {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; /* Espalha Topo, Centro e Base */
+            text-align: center;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
         .completa { font-size: 8pt; justify-content: space-between; }
         .alert { background: black; color: white; text-align: center; font-weight: bold; padding: 2px; font-size: 7pt; margin-top: 2px; }
 
-        /* Grid de Impressão */
         .print-area { display: grid; grid-template-columns: repeat(5, 40mm); gap: 5mm; margin-top: 20px; }
 
-        /* Itens Salvos */
         .item-salvo { background: #f9f9f9; padding: 12px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 10px; cursor: pointer; position: relative; }
         .item-salvo:hover { border-color: #6366f1; background: #f5f7ff; }
         .btn-del { background: #ff4d4d; color: white; border: none; padding: 2px 8px; border-radius: 4px; position: absolute; right: 8px; top: 8px; cursor: pointer; }
@@ -42,7 +52,7 @@
         @media print {
             .editor, .sidebar { display: none !important; }
             body { background: white; }
-            .label { border: 1px solid #ccc; }
+            .label { border: 1px solid #000; }
         }
     </style>
 </head>
@@ -65,12 +75,12 @@
                 <input type="number" id="fonte" value="14" oninput="update()">
             </div>
             <div style="flex: 1; align-self: flex-end; padding-bottom: 15px;">
-                <label style="display: inline;"><input type="checkbox" id="truncar" onchange="update()"> Truncar Texto</label>
+                <label><input type="checkbox" id="truncar" onchange="update()"> Truncar Inteligente</label>
             </div>
         </div>
 
         <div id="grupoTexto">
-            <label>Texto (use vírgula ou Enter)</label>
+            <label>Texto</label>
             <textarea id="texto" placeholder="Ex: BOLO DE POTE, CHOCOLATE" oninput="update()"></textarea>
         </div>
 
@@ -82,20 +92,21 @@
         </div>
 
         <div id="grupoBolo" style="display:none">
-            <label>Massa</label>
+            <label>Massa (Topo)</label>
             <select id="massa" onchange="update()">
                 <option>BOLO BRANCO</option>
                 <option>BOLO DE CHOCOLATE</option>
                 <option>BOLO MESCLADO</option>
+                <option>BOLO RED VELVET</option>
             </select>
-            <label>Recheio 1</label>
+            <label>Recheio 1 (Meio)</label>
             <select id="recheio1" onchange="update()"></select>
-            <label>Recheio 2</label>
+            <label>Recheio 2 (Baixo)</label>
             <select id="recheio2" onchange="update()"></select>
         </div>
 
         <div class="btn-group">
-            <button class="btn btn-success" onclick="salvar()">💾 Salvar na Lista</button>
+            <button class="btn btn-success" onclick="salvar()">💾 Salvar Etiqueta</button>
             <button class="btn btn-primary" onclick="gerarGrade()">🔄 Gerar Grade (20)</button>
         </div>
         <button class="btn btn-print" onclick="imprimir()">🖨️ Imprimir Etiquetas</button>
@@ -105,17 +116,16 @@
         <h3>Preview</h3>
         <div id="preview"></div>
     </div>
-
     <div id="printArea" class="print-area"></div>
 </div>
 
 <aside class="sidebar">
-    <h3>📂 Etiquetas Salvas</h3>
+    <h3>📂 Minhas Etiquetas</h3>
     <div id="listaSalvos"></div>
 </aside>
 
 <script>
-const recheios = ["LEITE CONDENSADO","LEITE CONDENSADO COM COCO","BRIGADEIRO","MOUSSE DE MARACUJÁ","MOUSSE DE MORANGO","CREME","NINHO","DOCE DE LEITE"];
+const recheios = ["(VAZIO)", "LEITE CONDENSADO","LEITE CONDENSADO COM COCO","BRIGADEIRO","MOUSSE DE MARACUJÁ","MOUSSE DE MORANGO","CREME DE NINHO","DOCE DE LEITE COM NOZES"];
 
 function carregarRecheios() {
     const r1 = document.getElementById("recheio1");
@@ -124,6 +134,16 @@ function carregarRecheios() {
         r1.innerHTML += `<option>${r}</option>`;
         r2.innerHTML += `<option>${r}</option>`;
     });
+}
+
+function aplicarAbreviacoes(texto) {
+    return texto.toUpperCase()
+        .replace(/LEITE CONDENSADO/g, "LEITE COND.")
+        .replace(/LEITE COND\./g, "L. COND.")
+        .replace(/CONDENSADO/g, "COND.")
+        .replace(/MARACUJÁ/g, "MARAC.")
+        .replace(/MORANGO/g, "MORANG.")
+        .replace(/CHOCOLATE/g, "CHOC.");
 }
 
 function criarEtiquetaHTML() {
@@ -137,8 +157,8 @@ function criarEtiquetaHTML() {
 
     if (tipo === "texto") {
         div.classList.add("nome");
-        const texto = document.getElementById("texto").value.toUpperCase();
-        div.innerHTML = texto.split(/\n|,/).map(t => `<div>${t.trim()}</div>`).join("");
+        let txt = document.getElementById("texto").value;
+        div.innerHTML = txt.split(/\n|,/).map(t => `<div>${t.trim().toUpperCase()}</div>`).join("");
     } 
     else if (tipo === "completa") {
         div.classList.add("completa");
@@ -149,16 +169,42 @@ function criarEtiquetaHTML() {
             <div class="alert">ALTO EM: GORDURA SATURADA</div>`;
     } 
     else if (tipo === "bolo") {
-        div.classList.add("nome");
+        const m = document.getElementById("massa").value;
+        const r1 = document.getElementById("recheio1").value;
+        const r2 = document.getElementById("recheio2").value;
+        
         div.innerHTML = `
-            <div>${document.getElementById("massa").value}</div>
-            <div style="font-weight:normal; font-size:0.9em">${document.getElementById("recheio1").value}</div>
-            <div style="font-weight:normal; font-size:0.9em">${document.getElementById("recheio2").value}</div>`;
+            <div class="layout-bolo">
+                <div class="topo">${m}</div>
+                <div class="meio" style="font-size:0.9em">${r1 !== '(VAZIO)' ? r1 : ''}</div>
+                <div class="baixo" style="font-size:0.9em">${r2 !== '(VAZIO)' ? r2 : ''}</div>
+            </div>`;
     }
 
-    // Lógica de Truncar vs Ajustar Fonte
     if (truncar) {
-        setTimeout(() => truncarTexto(div), 0);
+        setTimeout(() => {
+            // Tenta abreviar antes de cortar
+            if (div.scrollHeight > div.clientHeight) {
+                const elementos = div.querySelectorAll('div');
+                elementos.forEach(el => {
+                    if (el.innerText.includes("LEITE CONDENSADO")) {
+                        el.innerText = el.innerText.replace("LEITE CONDENSADO", "LEITE COND.");
+                    }
+                });
+            }
+            // Se ainda não couber, abrevia mais
+            if (div.scrollHeight > div.clientHeight) {
+                const elementos = div.querySelectorAll('div');
+                elementos.forEach(el => el.innerText = aplicarAbreviacoes(el.innerText));
+            }
+            // Se ainda assim não couber, remove palavras (truncar clássico)
+            while (div.scrollHeight > div.clientHeight) {
+                let conteudo = div.innerText.trim().split(/\s+/);
+                if (conteudo.length <= 1) break;
+                conteudo.pop();
+                div.innerText = conteudo.join(" ") + "...";
+            }
+        }, 0);
     } else {
         setTimeout(() => ajustarFonte(div), 0);
     }
@@ -174,16 +220,6 @@ function ajustarFonte(el) {
     }
 }
 
-function truncarTexto(el) {
-    // Remove palavras inteiras até caber, para não perder o sentido cortando letras
-    while (el.scrollHeight > el.clientHeight) {
-        let conteudo = el.innerText.trim().split(/\s+/);
-        if (conteudo.length <= 1) break;
-        conteudo.pop();
-        el.innerText = conteudo.join(" ") + "...";
-    }
-}
-
 function update() {
     const tipo = document.getElementById("tipo").value;
     document.getElementById("grupoTexto").style.display = tipo === "texto" ? "block" : "none";
@@ -195,11 +231,14 @@ function update() {
     preview.appendChild(criarEtiquetaHTML());
 }
 
-// SALVAMENTO (LOCALSTORAGE)
 function salvar() {
+    const nomeSalvo = prompt("Digite um nome para identificar esta etiqueta:", "Minha Etiqueta");
+    if (!nomeSalvo) return;
+
     let lista = JSON.parse(localStorage.getItem("minhasEtiquetas")) || [];
     const item = {
         id: Date.now(),
+        identificador: nomeSalvo,
         tipo: document.getElementById("tipo").value,
         texto: document.getElementById("texto").value,
         titulo: document.getElementById("titulo").value,
@@ -220,8 +259,7 @@ function carregarLista() {
     lista.forEach(item => {
         const el = document.createElement("div");
         el.className = "item-salvo";
-        const resumo = item.titulo || item.texto.substring(0, 20) || item.massa;
-        el.innerHTML = `<strong>${resumo}</strong><button class="btn-del" onclick="excluir(${item.id}, event)">×</button>`;
+        el.innerHTML = `<strong>${item.identificador}</strong><button class="btn-del" onclick="excluir(${item.id}, event)">×</button>`;
         el.onclick = () => restaurar(item);
         div.appendChild(el);
     });
@@ -249,9 +287,7 @@ function excluir(id, event) {
 function gerarGrade() {
     const area = document.getElementById("printArea");
     area.innerHTML = "";
-    for (let i = 0; i < 20; i++) {
-        area.appendChild(criarEtiquetaHTML());
-    }
+    for (let i = 0; i < 20; i++) { area.appendChild(criarEtiquetaHTML()); }
 }
 
 function imprimir() {
@@ -259,13 +295,10 @@ function imprimir() {
     if (!qtd) return;
     const area = document.getElementById("printArea");
     area.innerHTML = "";
-    for (let i = 0; i < qtd; i++) {
-        area.appendChild(criarEtiquetaHTML());
-    }
+    for (let i = 0; i < qtd; i++) { area.appendChild(criarEtiquetaHTML()); }
     setTimeout(() => window.print(), 300);
 }
 
-// Início
 carregarRecheios();
 carregarLista();
 update();
