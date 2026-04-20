@@ -56,6 +56,7 @@ button {
     justify-content: center;
     display: flex;
     flex-direction: column;
+    text-transform: uppercase;
 }
 
 .completa {
@@ -109,6 +110,13 @@ button {
             <option value="bolo">Bolo (automático)</option>
         </select>
 
+        <label>Impressora</label>
+        <select id="impressora" onchange="salvarImpressora()">
+            <option value="padrao">Impressora padrão</option>
+            <option value="etiqueta">Impressora de etiquetas</option>
+            <option value="termica">Impressora térmica</option>
+        </select>
+
         <!-- TEXTO -->
         <div id="grupoTexto">
             <label>Texto</label>
@@ -129,7 +137,6 @@ button {
 
         <!-- BOLO -->
         <div id="grupoBolo">
-
             <label>Massa</label>
             <select id="massa" onchange="update()">
                 <option>BOLO BRANCO</option>
@@ -142,7 +149,6 @@ button {
 
             <label>Recheio 2</label>
             <select id="recheio2" onchange="update()"></select>
-
         </div>
 
         <label>Nome para salvar</label>
@@ -151,7 +157,7 @@ button {
         <button class="btn" onclick="gerar()">Gerar</button>
         <button class="btn-green" onclick="salvar()">Salvar / Atualizar</button>
         <button class="btn" onclick="limparEdicao()">Novo</button>
-        <button class="btn" onclick="window.print()">Imprimir</button>
+        <button class="btn" onclick="imprimir()">Imprimir</button>
 
     </div>
 
@@ -171,83 +177,50 @@ button {
 
 <script>
 
-// LISTA RECHEIOS
 const recheios = [
-"Leite condensado",
-"Leite condensado com coco",
-"Leite condensado com abacaxi",
-"Leite condensado com morango",
-"Leite condensado com pessego",
-"Leite condensado com ameixa",
-"Brigadeiro",
-"Creme",
-"Mousse chocolate",
-"Mousse de Leite Ninho",
-"Mousse de Morango",
-"Mousse de Maracujá",
-"Mousse de 4 leites",
-"Leite condensado com Abacaxi e Coco",
-"Floresta Negra"
+"Leite condensado","Leite condensado com coco","Leite condensado com abacaxi",
+"Leite condensado com morango","Leite condensado com pessego","Leite condensado com ameixa",
+"Brigadeiro","Creme","Mousse chocolate","Mousse de Leite Ninho",
+"Mousse de Morango","Mousse de Maracujá","Mousse de 4 leites",
+"Leite condensado com Abacaxi e Coco","Floresta Negra"
 ];
 
 function carregarRecheios() {
-    const r1 = document.getElementById("recheio1");
-    const r2 = document.getElementById("recheio2");
-
     recheios.forEach(r => {
-        r1.innerHTML += `<option>${r}</option>`;
-        r2.innerHTML += `<option>${r}</option>`;
+        recheio1.innerHTML += `<option>${r}</option>`;
+        recheio2.innerHTML += `<option>${r}</option>`;
     });
 }
 
-// CRIAR ETIQUETA
 function criarEtiqueta() {
-    const tipo = document.getElementById("tipo").value;
+    const tipo = tipoEl.value;
     const div = document.createElement("div");
     div.className = "label";
 
     if (tipo === "texto") {
         div.classList.add("nome");
-
-        const texto = document.getElementById("texto").value;
-        const espacamento = document.getElementById("espacamento").value;
-
-        div.style.gap = espacamento + "px";
-
-        div.innerHTML = texto
-            .split(/,|\n/)
-            .map(t => `<div>${t.toUpperCase()}</div>`)
-            .join("");
+        div.style.gap = espacamento.value + "px";
+        div.innerHTML = texto.value.split(/,|\n/).map(t => `<div>${t}</div>`).join("");
     }
 
     if (tipo === "completa") {
         div.classList.add("completa");
-
         div.innerHTML = `
-            <div class="titulo">${document.getElementById("titulo").value}</div>
-            <div><b>Ingredientes:</b> ${document.getElementById("ingredientes").value}</div>
-            <div class="alert">
-                ALÉRGICOS: CONTÉM DERIVADOS DO TRIGO, SOJA, LEITE E OVOS.<br>
-                Contém Glúten
-            </div>
+            <div class="titulo">${titulo.value}</div>
+            <div><b>Ingredientes:</b> ${ingredientes.value}</div>
+            <div class="alert">ALÉRGICOS: CONTÉM DERIVADOS DO TRIGO, SOJA, LEITE E OVOS.<br>Contém Glúten</div>
             <div class="alert">ALTO EM: GORDURA SATURADA</div>
         `;
     }
 
     if (tipo === "bolo") {
         div.classList.add("nome");
-
-        const massa = document.getElementById("massa").value;
-        const r1 = document.getElementById("recheio1").value;
-        const r2 = document.getElementById("recheio2").value;
-
-        const espacamento = document.getElementById("espacamento").value;
-        div.style.gap = espacamento + "px";
+        div.style.gap = espacamento.value + "px";
 
         div.innerHTML = `
-            <div>${massa}</div>
-            <div>${r1}</div>
-            <div>${r2}</div>
+            <div>${massa.value}</div>
+            <div>${recheio1.value}</div>
+            <div>${recheio2.value}</div>
         `;
     }
 
@@ -258,7 +231,6 @@ function criarEtiqueta() {
 function ajustarFonte(el) {
     let size = 14;
     el.style.fontSize = size + "pt";
-
     while (el.scrollHeight > el.clientHeight && size > 6) {
         size--;
         el.style.fontSize = size + "pt";
@@ -266,48 +238,57 @@ function ajustarFonte(el) {
 }
 
 function update() {
-    const preview = document.getElementById("preview");
     preview.innerHTML = "";
     preview.appendChild(criarEtiqueta());
 
-    const tipo = document.getElementById("tipo").value;
-
-    document.getElementById("grupoTexto").style.display = tipo === "texto" ? "block" : "none";
-    document.getElementById("grupoCompleta").style.display = tipo === "completa" ? "block" : "none";
-    document.getElementById("grupoBolo").style.display = tipo === "bolo" ? "block" : "none";
+    grupoTexto.style.display = tipo.value === "texto" ? "block" : "none";
+    grupoCompleta.style.display = tipo.value === "completa" ? "block" : "none";
+    grupoBolo.style.display = tipo.value === "bolo" ? "block" : "none";
 }
 
 function gerar() {
-    const area = document.getElementById("print");
-    area.innerHTML = "";
+    print.innerHTML = "";
+    for (let i = 0; i < 20; i++) print.appendChild(criarEtiqueta());
+}
 
-    for (let i = 0; i < 20; i++) {
-        area.appendChild(criarEtiqueta());
-    }
+function imprimir() {
+    const qtd = prompt("Quantas etiquetas deseja imprimir?", "20");
+    if (!qtd) return;
+
+    print.innerHTML = "";
+    for (let i = 0; i < qtd; i++) print.appendChild(criarEtiqueta());
+
+    setTimeout(() => window.print(), 200);
+}
+
+function salvarImpressora() {
+    localStorage.setItem("imp", impressora.value);
+}
+
+function carregarImpressora() {
+    const imp = localStorage.getItem("imp");
+    if (imp) impressora.value = imp;
 }
 
 function salvar() {
     let lista = JSON.parse(localStorage.getItem("etiquetas")) || [];
-    const id = document.getElementById("editId").value;
+    const id = editId.value;
 
     const dados = {
-        id: id ? Number(id) : Date.now(),
-        nome: document.getElementById("nomeSalvar").value || "Sem nome",
-        tipo: document.getElementById("tipo").value,
-        texto: document.getElementById("texto").value,
-        titulo: document.getElementById("titulo").value,
-        ingredientes: document.getElementById("ingredientes").value,
-        massa: document.getElementById("massa").value,
-        recheio1: document.getElementById("recheio1").value,
-        recheio2: document.getElementById("recheio2").value,
-        espacamento: document.getElementById("espacamento").value
+        id: id || Date.now(),
+        nome: nomeSalvar.value,
+        tipo: tipo.value,
+        texto: texto.value,
+        titulo: titulo.value,
+        ingredientes: ingredientes.value,
+        massa: massa.value,
+        recheio1: recheio1.value,
+        recheio2: recheio2.value,
+        espacamento: espacamento.value
     };
 
-    if (id) {
-        lista = lista.map(i => i.id == id ? dados : i);
-    } else {
-        lista.push(dados);
-    }
+    if (id) lista = lista.map(i => i.id == id ? dados : i);
+    else lista.push(dados);
 
     localStorage.setItem("etiquetas", JSON.stringify(lista));
     limparEdicao();
@@ -316,71 +297,59 @@ function salvar() {
 
 function carregar() {
     let lista = JSON.parse(localStorage.getItem("etiquetas")) || [];
-    const div = document.getElementById("lista");
-    div.innerHTML = "";
+    listaDiv.innerHTML = "";
 
     lista.forEach(item => {
-        const el = document.createElement("div");
-        el.className = "item";
-
-        el.innerHTML = `
-            <b>${item.nome}</b><br>
-            <small>${item.tipo}</small><br>
-            <button onclick="event.stopPropagation(); editar(${item.id})">Editar</button>
-            <button onclick="event.stopPropagation(); duplicar(${item.id})">Duplicar</button>
-            <button onclick="event.stopPropagation(); excluir(${item.id})">Excluir</button>
+        listaDiv.innerHTML += `
+            <div class="item">
+                <b>${item.nome}</b><br>
+                <small>${item.tipo}</small><br>
+                <button onclick="editar(${item.id})">Editar</button>
+                <button onclick="duplicar(${item.id})">Duplicar</button>
+                <button onclick="excluir(${item.id})">Excluir</button>
+            </div>
         `;
-
-        div.appendChild(el);
     });
 }
 
 function editar(id) {
-    let lista = JSON.parse(localStorage.getItem("etiquetas")) || [];
-    const item = lista.find(i => i.id == id);
-
-    document.getElementById("editId").value = item.id;
-    document.getElementById("nomeSalvar").value = item.nome;
-    document.getElementById("tipo").value = item.tipo;
-    document.getElementById("texto").value = item.texto || "";
-    document.getElementById("titulo").value = item.titulo || "";
-    document.getElementById("ingredientes").value = item.ingredientes || "";
-    document.getElementById("massa").value = item.massa || "";
-    document.getElementById("recheio1").value = item.recheio1 || "";
-    document.getElementById("recheio2").value = item.recheio2 || "";
-    document.getElementById("espacamento").value = item.espacamento || 6;
-
+    const item = JSON.parse(localStorage.getItem("etiquetas")).find(i => i.id == id);
+    editId.value = item.id;
+    nomeSalvar.value = item.nome;
+    tipo.value = item.tipo;
+    texto.value = item.texto || "";
+    titulo.value = item.titulo || "";
+    ingredientes.value = item.ingredientes || "";
+    massa.value = item.massa || "";
+    recheio1.value = item.recheio1 || "";
+    recheio2.value = item.recheio2 || "";
+    espacamento.value = item.espacamento || 6;
     update();
 }
 
 function duplicar(id) {
-    let lista = JSON.parse(localStorage.getItem("etiquetas")) || [];
+    let lista = JSON.parse(localStorage.getItem("etiquetas"));
     const item = lista.find(i => i.id == id);
-
-    lista.push({
-        ...item,
-        id: Date.now(),
-        nome: item.nome + " (cópia)"
-    });
-
+    lista.push({...item, id: Date.now(), nome: item.nome + " (cópia)"});
     localStorage.setItem("etiquetas", JSON.stringify(lista));
     carregar();
 }
 
 function excluir(id) {
-    let lista = JSON.parse(localStorage.getItem("etiquetas")) || [];
+    let lista = JSON.parse(localStorage.getItem("etiquetas"));
     lista = lista.filter(i => i.id != id);
     localStorage.setItem("etiquetas", JSON.stringify(lista));
     carregar();
 }
 
 function limparEdicao() {
-    document.getElementById("editId").value = "";
-    document.getElementById("nomeSalvar").value = "";
+    editId.value = "";
+    nomeSalvar.value = "";
 }
 
 // INIT
 carregarRecheios();
+carregarImpressora();
 update();
 carregar();
 
