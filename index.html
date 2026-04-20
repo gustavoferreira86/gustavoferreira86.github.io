@@ -5,56 +5,56 @@
 <title>Gerador de Etiquetas</title>
 
 <style>
-body { font-family: Arial; display: flex; margin: 0; background: #f6f8fb; }
-.editor { flex: 1; padding: 30px; }
-.sidebar { width: 320px; background: white; border-left: 1px solid #ddd; padding: 20px; }
+body {
+    font-family: Arial;
+    display: flex;
+    margin: 0;
+    background: #f5f5f5;
+}
+
+.editor { flex: 1; padding: 20px; }
+.sidebar { width: 300px; background: white; border-left: 1px solid #ddd; padding: 15px; }
 
 .card {
     background: white;
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 10px;
 }
 
-textarea, input, select {
+input, textarea, select {
     width: 100%;
-    padding: 10px;
-    margin-bottom: 10px;
-    border-radius: 8px;
-    border: 1px solid #ddd;
+    padding: 8px;
+    margin-bottom: 8px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
 }
 
 button {
-    padding: 8px 10px;
-    border-radius: 6px;
+    padding: 8px;
     border: none;
+    border-radius: 6px;
     cursor: pointer;
-    margin: 2px;
-    font-size: 12px;
+    margin-right: 5px;
 }
 
 .btn { background: #6366f1; color: white; }
-.btn-green { background: #10b981; color: white; }
 
 .label {
     width: 40mm;
     height: 40mm;
-    background: white;
-    border: 1px solid #ccc;
+    border: 1px solid #000;
     padding: 3mm;
     box-sizing: border-box;
-    overflow: hidden;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
 .nome {
-    font-weight: bold;
     text-align: center;
+    font-weight: bold;
     justify-content: center;
-    display: flex;
-    flex-direction: column;
 }
 
 .completa {
@@ -80,15 +80,13 @@ button {
     .editor, .sidebar { display: none; }
 }
 </style>
-</head>
 
+</head>
 <body>
 
 <div class="editor">
 
 <div class="card">
-
-<input type="hidden" id="editId">
 
 <label>Tipo</label>
 <select id="tipo" onchange="update()">
@@ -97,38 +95,38 @@ button {
     <option value="bolo">Bolo</option>
 </select>
 
-<label>Fonte (pt)</label>
+<label>Tamanho da fonte (pt)</label>
 <input type="number" id="fonte" value="14" oninput="update()">
 
 <label><input type="checkbox" id="truncar" onchange="update()"> Truncar texto</label>
 
 <!-- TEXTO -->
 <div id="grupoTexto">
-    <textarea id="texto" oninput="update()"></textarea>
+<textarea id="texto" placeholder="Digite o texto" oninput="update()"></textarea>
 </div>
 
 <!-- COMPLETA -->
 <div id="grupoCompleta">
-    <input id="titulo" placeholder="Título" oninput="update()">
-    <textarea id="ingredientes" placeholder="Ingredientes" oninput="update()"></textarea>
+<input id="titulo" placeholder="Título" oninput="update()">
+<textarea id="ingredientes" placeholder="Ingredientes" oninput="update()"></textarea>
 </div>
 
 <!-- BOLO -->
 <div id="grupoBolo">
-    <select id="massa" onchange="update()">
-        <option>BOLO BRANCO</option>
-        <option>BOLO DE CHOCOLATE</option>
-        <option>BOLO MESCLADO</option>
-    </select>
+<select id="massa" onchange="update()">
+<option>BOLO BRANCO</option>
+<option>BOLO DE CHOCOLATE</option>
+<option>BOLO MESCLADO</option>
+</select>
 
-    <select id="recheio1" onchange="update()"></select>
-    <select id="recheio2" onchange="update()"></select>
+<select id="recheio1" onchange="update()"></select>
+<select id="recheio2" onchange="update()"></select>
 </div>
 
-<input id="nomeSalvar" placeholder="Nome">
+<input id="nomeSalvar" placeholder="Nome para salvar">
 
 <button class="btn" onclick="gerar()">Gerar</button>
-<button class="btn-green" onclick="salvar()">Salvar</button>
+<button class="btn" onclick="salvar()">Salvar</button>
 <button class="btn" onclick="imprimir()">Imprimir</button>
 
 </div>
@@ -149,6 +147,7 @@ button {
 
 <script>
 
+// RECHEIOS
 const recheios = [
 "LEITE CONDENSADO","LEITE CONDENSADO COM COCO","LEITE CONDENSADO COM ABACAXI",
 "LEITE CONDENSADO COM MORANGO","LEITE CONDENSADO COM PESSEGO","LEITE CONDENSADO COM AMEIXA",
@@ -158,30 +157,43 @@ const recheios = [
 ];
 
 function carregarRecheios() {
+    const r1 = document.getElementById("recheio1");
+    const r2 = document.getElementById("recheio2");
+
     recheios.forEach(r => {
-        recheio1.innerHTML += `<option>${r}</option>`;
-        recheio2.innerHTML += `<option>${r}</option>`;
+        r1.innerHTML += `<option>${r}</option>`;
+        r2.innerHTML += `<option>${r}</option>`;
     });
 }
 
+// CRIAR ETIQUETA
 function criarEtiqueta() {
-    const tipo = tipoEl.value;
+
+    const tipo = document.getElementById("tipo").value;
+    const fonte = document.getElementById("fonte").value;
+    const truncar = document.getElementById("truncar").checked;
+
     const div = document.createElement("div");
     div.className = "label";
-
-    let fonteSize = fonte.value;
-    div.style.fontSize = fonteSize + "pt";
+    div.style.fontSize = fonte + "pt";
 
     if (tipo === "texto") {
         div.classList.add("nome");
-        div.innerHTML = texto.value.toUpperCase().split(/\n|,/).map(t=>`<div>${t}</div>`).join("");
+
+        const texto = document.getElementById("texto").value.toUpperCase();
+
+        div.innerHTML = texto
+            .split(/\n|,/)
+            .map(t => `<div>${t}</div>`)
+            .join("");
     }
 
     if (tipo === "completa") {
         div.classList.add("completa");
+
         div.innerHTML = `
-        <div><b>${titulo.value}</b></div>
-        <div>${ingredientes.value}</div>
+        <div><b>${document.getElementById("titulo").value}</b></div>
+        <div>${document.getElementById("ingredientes").value}</div>
         <div class="alert">ALÉRGICOS: CONTÉM DERIVADOS DO TRIGO, SOJA, LEITE E OVOS.<br>CONTÉM GLÚTEN</div>
         <div class="alert">ALTO EM: GORDURA SATURADA</div>`;
     }
@@ -190,71 +202,92 @@ function criarEtiqueta() {
         div.classList.add("nome");
 
         div.innerHTML = `
-        <div>${massa.value.toUpperCase()}</div>
-        <div>${recheio1.value.toUpperCase()}</div>
-        <div>${recheio2.value.toUpperCase()}</div>`;
+        <div>${document.getElementById("massa").value}</div>
+        <div>${document.getElementById("recheio1").value}</div>
+        <div>${document.getElementById("recheio2").value}</div>`;
     }
 
-    ajustar(div);
+    if (!truncar) {
+        ajustarFonte(div);
+    }
 
     return div;
 }
 
-function ajustar(el){
-    if(truncar.checked){
-        el.style.overflow="hidden";
-    } else {
-        let size = fonte.value;
-        while(el.scrollHeight > el.clientHeight && size > 6){
-            size--;
-            el.style.fontSize = size + "pt";
-        }
+// AUTO AJUSTE
+function ajustarFonte(el) {
+    let size = parseInt(el.style.fontSize);
+    while (el.scrollHeight > el.clientHeight && size > 6) {
+        size--;
+        el.style.fontSize = size + "pt";
     }
 }
 
-function update(){
-    preview.innerHTML="";
+// UPDATE
+function update() {
+    const tipo = document.getElementById("tipo").value;
+
+    document.getElementById("grupoTexto").style.display = tipo === "texto" ? "block" : "none";
+    document.getElementById("grupoCompleta").style.display = tipo === "completa" ? "block" : "none";
+    document.getElementById("grupoBolo").style.display = tipo === "bolo" ? "block" : "none";
+
+    const preview = document.getElementById("preview");
+    preview.innerHTML = "";
     preview.appendChild(criarEtiqueta());
-
-    grupoTexto.style.display = tipo.value==="texto"?"block":"none";
-    grupoCompleta.style.display = tipo.value==="completa"?"block":"none";
-    grupoBolo.style.display = tipo.value==="bolo"?"block":"none";
 }
 
-function gerar(){
-    print.innerHTML="";
-    for(let i=0;i<20;i++) print.appendChild(criarEtiqueta());
+// GERAR
+function gerar() {
+    const area = document.getElementById("print");
+    area.innerHTML = "";
+
+    for (let i = 0; i < 20; i++) {
+        area.appendChild(criarEtiqueta());
+    }
 }
 
-function imprimir(){
-    const qtd = prompt("Quantidade?",20);
-    if(!qtd) return;
-    print.innerHTML="";
-    for(let i=0;i<qtd;i++) print.appendChild(criarEtiqueta());
-    setTimeout(()=>window.print(),200);
+// IMPRIMIR
+function imprimir() {
+    const qtd = prompt("Quantas etiquetas?", "20");
+    if (!qtd) return;
+
+    const area = document.getElementById("print");
+    area.innerHTML = "";
+
+    for (let i = 0; i < qtd; i++) {
+        area.appendChild(criarEtiqueta());
+    }
+
+    setTimeout(() => window.print(), 200);
 }
 
-function salvar(){
-    let lista = JSON.parse(localStorage.getItem("etiquetas")||"[]");
+// SALVAR
+function salvar() {
+    let lista = JSON.parse(localStorage.getItem("etiquetas")) || [];
+
     lista.push({
-        nome:nomeSalvar.value,
-        tipo:tipo.value,
-        texto:texto.value,
-        titulo:titulo.value,
-        ingredientes:ingredientes.value
+        nome: document.getElementById("nomeSalvar").value,
+        tipo: document.getElementById("tipo").value,
+        texto: document.getElementById("texto").value
     });
-    localStorage.setItem("etiquetas",JSON.stringify(lista));
+
+    localStorage.setItem("etiquetas", JSON.stringify(lista));
     carregar();
 }
 
-function carregar(){
-    let lista = JSON.parse(localStorage.getItem("etiquetas")||"[]");
-    listaDiv.innerHTML="";
-    lista.forEach(i=>{
-        listaDiv.innerHTML+=`<div class="item"><b>${i.nome}</b></div>`;
+// LISTA
+function carregar() {
+    const lista = JSON.parse(localStorage.getItem("etiquetas")) || [];
+    const div = document.getElementById("lista");
+
+    div.innerHTML = "";
+
+    lista.forEach(item => {
+        div.innerHTML += `<div class="item"><b>${item.nome}</b></div>`;
     });
 }
 
+// INIT
 carregarRecheios();
 update();
 carregar();
