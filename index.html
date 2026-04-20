@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>Gerador de Etiquetas 40x40 - Recheios Completos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Outfit:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #6366f1; --bg: #f0f2f5; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; display: flex; margin: 0; background: var(--bg); height: 100vh; }
+        :root { --primary: #6366f1; --primary-hover: #4f46e5; --bg: #f0f2f5; --card-bg: #ffffff; }
+        body { font-family: 'Inter', sans-serif; display: flex; margin: 0; background: var(--bg); height: 100vh; }
 
         /* Interface */
         .editor { flex: 1; padding: 20px; overflow-y: auto; }
@@ -35,12 +36,22 @@
         .layout-bolo { height: 100%; display: flex; flex-direction: column; justify-content: space-between; text-align: center; }
         .alert { background: black; color: white; text-align: center; font-weight: bold; padding: 1px; font-size: 7pt; margin-top: 1px; width: 100%; }
 
+        #printArea { position: fixed; top: -9999px; left: -9999px; width: 40mm; height: auto; overflow: visible; }
+
         @media print {
             @page { size: 40mm 40mm; margin: 0; }
-            body { background: white; }
+            body { background: white !important; color: black !important; margin: 0; padding: 0; }
             .editor, .sidebar { display: none !important; }
-            #printArea { display: block !important; }
-            .label { border: none !important; page-break-after: always; }
+            #printArea { display: block !important; position: static !important; visibility: visible !important; }
+            .label { 
+                border: none !important; 
+                page-break-after: always; 
+                color: black !important; 
+                -webkit-print-color-adjust: exact;
+                width: 40mm !important;
+                height: 40mm !important;
+            }
+            * { color: black !important; background: transparent !important; }
         }
 
         .item-salvo { background: #f9f9f9; padding: 10px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 8px; cursor: pointer; position: relative; }
@@ -53,16 +64,21 @@
     <div class="card">
         <h3>✍️ Editor Profissional 40x40</h3>
         
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
             <div><label>Fonte</label>
                 <select id="fontFamily" onchange="update()">
+                    <option value="'Inter', sans-serif">Inter (Modern)</option>
+                    <option value="'Outfit', sans-serif">Outfit (Premium)</option>
+                    <option value="'Roboto', sans-serif">Roboto</option>
                     <option value="Arial">Arial</option>
                     <option value="Verdana">Verdana</option>
                     <option value="Impact">Impact</option>
+                    <option value="'Courier New', Courier, monospace">Monospace</option>
+                    <option value="Georgia">Serif (Georgia)</option>
                 </select>
             </div>
-            <div><label>Tam. Inicial</label>
-                <input type="number" id="fontSize" value="12" oninput="update()">
+            <div><label>Margem (mm)</label>
+                <input type="number" id="paddingSize" value="2" step="0.5" oninput="update()">
             </div>
         </div>
 
@@ -82,27 +98,54 @@
 
         <div id="grupoBolo">
             <label>Massa</label>
-            <select id="massa" onchange="update()">
-                <option>BOLO BRANCO</option>
-                <option>BOLO DE CHOCOLATE</option>
-                <option>BOLO MESCLADO</option>
-            </select>
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; align-items: end;">
+                <select id="massa" onchange="update()">
+                    <option>BOLO BRANCO</option>
+                    <option>BOLO DE CHOCOLATE</option>
+                    <option>BOLO MESCLADO</option>
+                </select>
+                <input type="number" id="fontSizeMassa" value="12" oninput="update()" title="Tam. Massa">
+            </div>
+
             <label>Recheio 1 (Meio)</label>
-            <select id="recheio1" onchange="update()"></select>
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; align-items: end;">
+                <select id="recheio1" onchange="update()"></select>
+                <input type="number" id="fontSizeR1" value="14" oninput="update()" title="Tam. Meio">
+            </div>
+
             <label>Recheio 2 (Baixo)</label>
-            <select id="recheio2" onchange="update()"></select>
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; align-items: end;">
+                <select id="recheio2" onchange="update()"></select>
+                <input type="number" id="fontSizeR2" value="10" oninput="update()" title="Tam. Baixo">
+            </div>
         </div>
 
         <div id="grupoCompleta" style="display:none">
-            <label>Nome do Produto</label>
-            <input id="titulo" placeholder="Ex: Bolo de Pote" oninput="update()">
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; align-items: end;">
+                <div>
+                    <label>Nome do Produto</label>
+                    <input id="titulo" placeholder="Ex: Bolo de Pote" oninput="update()">
+                </div>
+                <div>
+                    <label>Tam. Fonte</label>
+                    <input type="number" id="fontSizeCompleta" value="10" oninput="update()">
+                </div>
+            </div>
             <label>Ingredientes</label>
             <textarea id="ingredientes" rows="4" placeholder="Açúcar, farinha..." oninput="update()"></textarea>
         </div>
 
         <div id="grupoTexto" style="display:none">
-            <label>Conteúdo</label>
-            <textarea id="texto" rows="3" oninput="update()"></textarea>
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; align-items: end;">
+                <div>
+                    <label>Conteúdo</label>
+                    <textarea id="texto" rows="3" oninput="update()"></textarea>
+                </div>
+                <div>
+                    <label>Tam. Fonte</label>
+                    <input type="number" id="fontSizeTexto" value="12" oninput="update()">
+                </div>
+            </div>
         </div>
 
         <button class="btn btn-save" onclick="salvar()">💾 Salvar Etiqueta</button>
@@ -110,8 +153,8 @@
     </div>
 
     <div id="preview-container"><div id="preview"></div></div>
-    <div id="printArea"></div>
 </div>
+<div id="printArea"></div>
 
 <aside class="sidebar">
     <h3>📂 Biblioteca</h3>
@@ -119,25 +162,30 @@
 </aside>
 
 <script>
-// LISTA ATUALIZADA DE RECHEIOS
 const recheios = [
-    "(NENHUM)",
-    "LEITE CONDENSADO",
-    "LEITE CONDENSADO COM COCO",
-    "LEITE CONDENSADO COM ABACAXI",
-    "LEITE CONDENSADO COM MORANGO",
-    "LEITE CONDENSADO COM PESSEGO",
-    "LEITE CONDENSADO COM AMEIXA",
-    "BRIGADEIRO",
-    "CREME",
-    "MOUSSE CHOCOLATE",
-    "MOUSSE DE LEITE NINHO",
-    "MOUSSE DE MORANGO",
-    "MOUSSE DE MARACUJÁ",
-    "MOUSSE DE 4 LEITES",
-    "LEITE CONDENSADO COM ABACAXI E COCO",
-    "FLORESTA NEGRA"
+    "(NENHUM)", "LEITE CONDENSADO", "LEITE CONDENSADO COM COCO", "LEITE CONDENSADO COM ABACAXI",
+    "LEITE CONDENSADO COM MORANGO", "LEITE CONDENSADO COM PÊSSEGO", "LEITE CONDENSADO COM AMEIXA",
+    "BRIGADEIRO", "CREME", "MOUSSE CHOCOLATE", "MOUSSE DE LEITE NINHO", "MOUSSE DE MORANGO",
+    "MOUSSE DE MARACUJÁ", "MOUSSE DE 4 LEITES", "LEITE CONDENSADO COM ABACAXI E COCO", "FLORESTA NEGRA"
 ];
+
+const recheiosOpcoes = {
+    "LEITE CONDENSADO": ["LEITE COND.", "L. CONDENSADO", "L. COND.", "CONDENSADO"],
+    "LEITE CONDENSADO COM COCO": ["LEITE COND. COCO", "L. COND. COCO", "COND. COCO", "CONDENSADO COCO"],
+    "LEITE CONDENSADO COM ABACAXI": ["LEITE COND. ABACAXI", "L. COND. ABACAXI", "COND. ABACAXI", "CONDENSADO ABACAXI"],
+    "LEITE CONDENSADO COM MORANGO": ["LEITE COND. MORANGO", "L. COND. MORANGO", "COND. MORANGO", "CONDENSADO MORANGO"],
+    "LEITE CONDENSADO COM PÊSSEGO": ["LEITE COND. PÊSSEGO", "L. COND. PÊSSEGO", "COND. PÊSSEGO", "CONDENSADO PÊSSEGO"],
+    "LEITE CONDENSADO COM AMEIXA": ["LEITE COND. AMEIXA", "L. COND. AMEIXA", "COND. AMEIXA", "CONDENSADO AMEIXA"],
+    "LEITE CONDENSADO COM ABACAXI E COCO": ["LEITE COND. ABACAXI E COCO", "L. COND. ABACAXI E COCO", "COND. ABACAXI E COCO", "ABACAXI E COCO"],
+    "BRIGADEIRO": ["BRIGADEIRO", "BRIGAD.", "BRIG."],
+    "CREME": ["CREME", "CREM."],
+    "MOUSSE CHOCOLATE": ["MOUSSE CHOCOLATE", "MOUSSE CHOC.", "MOUSSE CHOC", "MOUSSE C."],
+    "MOUSSE DE LEITE NINHO": ["MOUSSE NINHO", "MOUSSE L. NINHO", "MOUSSE LEITE NINHO", "NINHO"],
+    "MOUSSE DE MORANGO": ["MOUSSE MORANGO", "MOUSSE MOR.", "MORANGO"],
+    "MOUSSE DE MARACUJÁ": ["MOUSSE MARACUJÁ", "MOUSSE MARAC.", "MARACUJÁ"],
+    "MOUSSE DE 4 LEITES": ["MOUSSE 4 LEITES", "MOUSSE 4L", "4 LEITES"],
+    "FLORESTA NEGRA": ["FLORESTA NEGRA", "FLORESTA N.", "F. NEGRA", "NEGRA"]
+};
 
 let styles = { bold: false, italic: false, align: 'center' };
 
@@ -164,41 +212,87 @@ function setAlign(a) {
     update();
 }
 
-function autoAjustarFonte(elemento) {
-    let tamanho = parseFloat(document.getElementById("fontSize").value);
-    elemento.style.fontSize = tamanho + "pt";
-    while (elemento.scrollHeight > elemento.clientHeight && tamanho > 6) {
-        tamanho -= 0.5;
+function autoAjustarFonte(elemento, tamanhoBase) {
+    let limite = elemento.clientHeight;
+    if (limite === 0) return;
+
+    // 1. TRUNCAMENTO AUTOMÁTICO
+    if (elemento.scrollHeight > limite + 1) {
+        const spans = elemento.querySelectorAll('.recheio-dinamico');
+        spans.forEach(span => {
+            const full = span.getAttribute('data-full');
+            const options = recheiosOpcoes[full] || [];
+            for (let opt of options) {
+                if (elemento.scrollHeight <= limite + 1) break;
+                span.innerText = opt;
+            }
+        });
+    }
+
+    // 2. AJUSTE DE FONTE (Proporcional para todos os filhos com font-size definido)
+    let scale = 1.0;
+    const elementsToScale = elemento.querySelectorAll('[data-base-size]');
+    
+    // Se não houver elementos com data-base-size (ex: modo texto livre), ajusta o próprio elemento
+    if (elementsToScale.length === 0) {
+        let tamanho = parseFloat(tamanhoBase);
         elemento.style.fontSize = tamanho + "pt";
+        while (elemento.scrollHeight > limite + 1 && tamanho > 4) {
+            tamanho -= 0.2;
+            elemento.style.fontSize = tamanho + "pt";
+        }
+    } else {
+        // Ajusta proporcionalmente os elementos internos
+        while (elemento.scrollHeight > limite + 1 && scale > 0.4) {
+            scale -= 0.02;
+            elementsToScale.forEach(el => {
+                const base = parseFloat(el.getAttribute('data-base-size'));
+                el.style.fontSize = (base * scale) + "pt";
+            });
+        }
     }
 }
 
 function criarEtiquetaHTML() {
     const tipo = document.getElementById("tipo").value;
     const font = document.getElementById("fontFamily").value;
+    const padding = document.getElementById("paddingSize").value || "2";
+    
+    let fontSizeBase = 12; // Valor padrão para Texto Livre
 
     const div = document.createElement("div");
     div.className = "label";
     div.style.fontFamily = font;
+    div.style.padding = padding + "mm";
     div.style.textAlign = styles.align;
     div.style.fontWeight = styles.bold ? "bold" : "normal";
     div.style.fontStyle = styles.italic ? "italic" : "normal";
 
     if (tipo === "bolo") {
+        const r1 = document.getElementById("recheio1").value;
+        const r2 = document.getElementById("recheio2").value;
+        const szM = document.getElementById("fontSizeMassa").value;
+        const sz1 = document.getElementById("fontSizeR1").value;
+        const sz2 = document.getElementById("fontSizeR2").value;
+        
+        const span1 = r1 !== '(NENHUM)' ? `<span class="recheio-dinamico" data-full="${r1}">${r1}</span>` : '';
+        const span2 = r2 !== '(NENHUM)' ? `<span class="recheio-dinamico" data-full="${r2}">${r2}</span>` : '';
+
         div.innerHTML = `
             <div id="container-ajuste" class="layout-bolo">
-                <div style="font-size:1.1em; border-bottom: 1px solid #eee; padding-bottom: 2px;">
+                <div data-base-size="${szM}" style="font-size:${szM}pt; border-bottom: 1px solid #eee; padding-bottom: 2px;">
                     ${document.getElementById("massa").value}
                 </div>
-                <div style="font-weight:normal; flex:1; display:flex; align-items:center; justify-content:center;">
-                    ${document.getElementById("recheio1").value !== '(NENHUM)' ? document.getElementById("recheio1").value : ''}
+                <div data-base-size="${sz1}" style="font-size:${sz1}pt; flex:1; display:flex; align-items:center; justify-content:center; line-height:1.2;">
+                    ${span1}
                 </div>
-                <div style="font-size:0.9em; border-top: 1px solid #eee; padding-top: 2px;">
-                    ${document.getElementById("recheio2").value !== '(NENHUM)' ? document.getElementById("recheio2").value : ''}
+                <div data-base-size="${sz2}" style="font-size:${sz2}pt; border-top: 1px solid #eee; padding-top: 2px;">
+                    ${span2}
                 </div>
             </div>`;
     } 
     else if (tipo === "completa") {
+        fontSizeBase = document.getElementById("fontSizeCompleta").value;
         div.innerHTML = `
             <div style="font-weight:bold; border-bottom:1px solid #000; margin-bottom:2px; font-size:1.1em;">
                 ${document.getElementById("titulo").value.toUpperCase() || 'PRODUTO'}
@@ -210,6 +304,7 @@ function criarEtiquetaHTML() {
             <div class="alert">ALTO EM: GORDURA SATURADA</div>`;
     } 
     else if (tipo === "texto") {
+        fontSizeBase = document.getElementById("fontSizeTexto").value;
         div.innerHTML = `<div id="container-ajuste" style="height:100%; display:flex; flex-direction:column; justify-content:center;">
             ${document.getElementById("texto").value.split(/\n|,/).map(l => `<div>${l.trim().toUpperCase()}</div>`).join("")}
         </div>`;
@@ -217,7 +312,7 @@ function criarEtiquetaHTML() {
 
     setTimeout(() => {
         const target = div.querySelector("#container-ajuste");
-        if(target) autoAjustarFonte(target);
+        if(target) autoAjustarFonte(target, fontSizeBase);
     }, 0);
 
     return div;
@@ -235,7 +330,22 @@ function update() {
 }
 
 function salvar() {
-    const n = prompt("Nome do modelo:", "Etiqueta Bolo");
+    const tipo = document.getElementById("tipo").value;
+    let nomeSugerido = "Etiqueta";
+
+    if (tipo === "bolo") {
+        const m = document.getElementById("massa").value;
+        const r1 = document.getElementById("recheio1").value;
+        const r2 = document.getElementById("recheio2").value;
+        nomeSugerido = `${m} (${r1} / ${r2})`;
+    } else if (tipo === "completa") {
+        nomeSugerido = document.getElementById("titulo").value || "Bolo de Pote";
+    } else {
+        const txt = document.getElementById("texto").value;
+        nomeSugerido = txt.split('\n')[0].substring(0, 20) || "Texto Livre";
+    }
+
+    const n = prompt("Nome do modelo:", nomeSugerido);
     if(!n) return;
     let l = JSON.parse(localStorage.getItem("etq_bolo_v4")) || [];
     l.push({
@@ -246,7 +356,16 @@ function salvar() {
         massa: document.getElementById("massa").value,
         recheio1: document.getElementById("recheio1").value,
         recheio2: document.getElementById("recheio2").value,
-        config: { ...styles, font: document.getElementById("fontFamily").value, size: document.getElementById("fontSize").value }
+        config: { 
+            ...styles, 
+            font: document.getElementById("fontFamily").value, 
+            padding: document.getElementById("paddingSize").value,
+            sizeMassa: document.getElementById("fontSizeMassa").value,
+            sizeR1: document.getElementById("fontSizeR1").value,
+            sizeR2: document.getElementById("fontSizeR2").value,
+            sizeCompleta: document.getElementById("fontSizeCompleta").value,
+            sizeTexto: document.getElementById("fontSizeTexto").value
+        }
     });
     localStorage.setItem("etq_bolo_v4", JSON.stringify(l));
     carregar();
@@ -256,24 +375,65 @@ function carregar() {
     const l = JSON.parse(localStorage.getItem("etq_bolo_v4")) || [];
     const d = document.getElementById("listaSalvos");
     d.innerHTML = "";
-    l.reverse().forEach(i => {
-        const el = document.createElement("div");
-        el.className = "item-salvo";
-        el.innerHTML = `<strong>${i.nome}</strong><button class="btn-del" onclick="excluir(${i.id}, event)">×</button>`;
-        el.onclick = () => {
-            document.getElementById("tipo").value = i.tipo;
-            document.getElementById("texto").value = i.texto || "";
-            document.getElementById("titulo").value = i.titulo || "";
-            document.getElementById("ingredientes").value = i.ingredientes || "";
-            document.getElementById("massa").value = i.massa || "BOLO BRANCO";
-            document.getElementById("recheio1").value = i.recheio1 || "(NENHUM)";
-            document.getElementById("recheio2").value = i.recheio2 || "(NENHUM)";
-            document.getElementById("fontFamily").value = i.config.font;
-            document.getElementById("fontSize").value = i.config.size;
-            styles = { bold: i.config.bold, italic: i.config.italic, align: i.config.align };
-            update();
-        };
-        d.appendChild(el);
+    
+    if (l.length === 0) {
+        d.innerHTML = "<p style='color:#999; font-size:12px; text-align:center;'>Nenhum modelo salvo.</p>";
+        return;
+    }
+
+    // Agrupar por tipo e ordenar por nome
+    const categorias = {
+        "bolo": { nome: "🍰 BOLOS", itens: [] },
+        "completa": { nome: "📝 INGREDIENTES", itens: [] },
+        "texto": { nome: "✍️ TEXTO LIVRE", itens: [] }
+    };
+
+    l.forEach(i => {
+        if (categorias[i.tipo]) categorias[i.tipo].itens.push(i);
+    });
+
+    Object.keys(categorias).forEach(catKey => {
+        const cat = categorias[catKey];
+        if (cat.itens.length === 0) return;
+
+        // Cabeçalho da categoria
+        const head = document.createElement("div");
+        head.style = "font-size: 10px; color: #888; font-weight: bold; margin: 15px 0 5px 5px; border-bottom: 1px solid #eee; padding-bottom: 3px;";
+        head.innerText = cat.nome;
+        d.appendChild(head);
+
+        // Itens ordenados alfabeticamente
+        cat.itens.sort((a, b) => a.nome.localeCompare(b.nome)).forEach(i => {
+            const el = document.createElement("div");
+            el.className = "item-salvo";
+            el.innerHTML = `<strong>${i.nome}</strong><button class="btn-del" onclick="excluir(${i.id}, event)">×</button>`;
+            el.onclick = () => {
+                document.getElementById("tipo").value = i.tipo;
+                document.getElementById("texto").value = i.texto || "";
+                document.getElementById("titulo").value = i.titulo || "";
+                document.getElementById("ingredientes").value = i.ingredientes || "";
+                document.getElementById("massa").value = i.massa || "BOLO BRANCO";
+                document.getElementById("recheio1").value = i.recheio1 || "(NENHUM)";
+                document.getElementById("recheio2").value = i.recheio2 || "(NENHUM)";
+                document.getElementById("fontFamily").value = i.config.font;
+                document.getElementById("paddingSize").value = i.config.padding || "2";
+                if(i.config.sizeMassa) document.getElementById("fontSizeMassa").value = i.config.sizeMassa;
+                if(i.config.sizeR1) document.getElementById("fontSizeR1").value = i.config.sizeR1;
+                if(i.config.sizeR2) document.getElementById("fontSizeR2").value = i.config.sizeR2;
+                if(i.config.sizeCompleta) document.getElementById("fontSizeCompleta").value = i.config.sizeCompleta;
+                if(i.config.sizeTexto) document.getElementById("fontSizeTexto").value = i.config.sizeTexto;
+                styles = { bold: i.config.bold, italic: i.config.italic, align: i.config.align };
+                
+                // Atualiza visual da barra de ferramentas
+                document.getElementById('btnBold').classList.toggle('active', styles.bold);
+                document.getElementById('btnItalic').classList.toggle('active', styles.italic);
+                document.getElementById('alignL').classList.toggle('active', styles.align === 'left');
+                document.getElementById('alignC').classList.toggle('active', styles.align === 'center');
+                
+                update();
+            };
+            d.appendChild(el);
+        });
     });
 }
 
@@ -286,11 +446,26 @@ function excluir(id, e) {
 
 function imprimir() {
     const q = prompt("Quantidade:", "1");
-    if(!q) return;
+    if(!q || isNaN(q)) return;
+    
     const a = document.getElementById("printArea");
-    a.innerHTML = "";
-    for(let i=0; i<q; i++) { a.appendChild(criarEtiquetaHTML()); }
-    setTimeout(() => window.print(), 800);
+    a.innerHTML = "Gerando etiquetas..."; // Feedback visual rápido
+    
+    // Pequeno delay para limpar e repopular
+    setTimeout(() => {
+        a.innerHTML = "";
+        for(let i=0; i<q; i++) { 
+            a.appendChild(criarEtiquetaHTML()); 
+        }
+        
+        // Espera as fontes ajustarem antes de imprimir
+        // Aumentado para 1.2s para garantir segurança
+        setTimeout(() => {
+            window.print();
+            // Limpa após imprimir para economizar memória
+            setTimeout(() => { a.innerHTML = ""; }, 1000);
+        }, 1200);
+    }, 50);
 }
 
 carregarRecheios(); carregar(); update();
