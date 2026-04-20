@@ -164,22 +164,31 @@ button {
     <div class="card">
 
         <label>Tipo</label>
-        <select id="tipoEtiqueta" onchange="atualizarPreview()">
+        <select id="tipoEtiqueta" onchange="trocarTipo()">
             <option value="nome">Nome grande</option>
             <option value="ingredientes">Ingredientes</option>
         </select>
 
-        <label>Ingredientes</label>
-        <textarea id="ingredientes" oninput="atualizarPreview()"></textarea>
+        <!-- NOME -->
+        <div id="grupoNome">
+            <label>Texto do nome</label>
+            <textarea id="nomeTexto" oninput="atualizarPreview()"></textarea>
+        </div>
 
-        <label>Alergênicos</label>
-        <textarea id="alergenicos" oninput="atualizarPreview()">ALÉRGICOS: CONTÉM
+        <!-- INGREDIENTES -->
+        <div id="grupoIngredientes">
+            <label>Ingredientes</label>
+            <textarea id="ingredientesFull" oninput="atualizarPreview()"></textarea>
+
+            <label>Alergênicos</label>
+            <textarea id="alergenicos" oninput="atualizarPreview()">ALÉRGICOS: CONTÉM
 DERIVADOS DO TRIGO, SOJA,
 LEITE E OVOS.
 Contém Glúten</textarea>
 
-        <label>Alto em</label>
-        <input id="altoEm" value="GORDURA SATURADA" oninput="atualizarPreview()">
+            <label>Alto em</label>
+            <input id="altoEm" value="GORDURA SATURADA" oninput="atualizarPreview()">
+        </div>
 
         <label>Margem (mm)</label>
         <input type="number" id="margem" value="3" oninput="atualizarPreview()">
@@ -211,16 +220,13 @@ Contém Glúten</textarea>
 
 <script>
 function formatarLinhas(texto) {
-    return texto.split(/,|\\n/)
+    return texto.split(/,|\n/)
         .map(p => "<div>" + p.trim().toUpperCase() + "</div>")
         .join("");
 }
 
 function criarEtiquetaHTML() {
     const tipo = document.getElementById("tipoEtiqueta").value;
-    const ingredientes = document.getElementById("ingredientes").value;
-    const alergenicos = document.getElementById("alergenicos").value;
-    const altoEm = document.getElementById("altoEm").value;
     const margem = document.getElementById("margem").value;
 
     const div = document.createElement("div");
@@ -228,11 +234,17 @@ function criarEtiquetaHTML() {
     div.style.padding = margem + "mm";
 
     if (tipo === "nome") {
+        const texto = document.getElementById("nomeTexto").value;
+
         div.classList.add("nome-grande");
-        div.innerHTML = formatarLinhas(ingredientes);
+        div.innerHTML = formatarLinhas(texto);
     }
 
     if (tipo === "ingredientes") {
+        const ingredientes = document.getElementById("ingredientesFull").value;
+        const alergenicos = document.getElementById("alergenicos").value;
+        const altoEm = document.getElementById("altoEm").value;
+
         div.classList.add("ingredientes");
 
         div.innerHTML = `
@@ -241,7 +253,7 @@ function criarEtiquetaHTML() {
             </div>
 
             <div class="bloco alert">
-                ${alergenicos.replace(/\\n/g, "<br>")}
+                ${alergenicos.replace(/\n/g, "<br>")}
             </div>
 
             <div class="bloco alto-em">ALTO EM:</div>
@@ -305,375 +317,25 @@ function gerarEtiqueta() {
     }
 }
 
-function salvar() {
-    let lista = JSON.parse(localStorage.getItem("etiquetas")) || [];
-    lista.push({
-        ingredientes: document.getElementById("ingredientes").value,
-        alergenicos: document.getElementById("alergenicos").value,
-        altoEm: document.getElementById("altoEm").value
-    });
-
-    localStorage.setItem("etiquetas", JSON.stringify(lista));
-    carregarLista();
-}
-
-function carregarLista() {
-    let lista = JSON.parse(localStorage.getItem("etiquetas")) || [];
-    const div = document.getElementById("listaSalvos");
-    div.innerHTML = "";
-
-    lista.forEach((item, i) => {
-        const el = document.createElement("div");
-        el.className = "item-salvo";
-
-        el.innerHTML = `
-            ${item.ingredientes.substring(0, 40)}...
-            <br>
-            <button onclick="event.stopPropagation(); excluir(${i})">Excluir</button>
-        `;
-
-        el.onclick = () => {
-            document.getElementById("ingredientes").value = item.ingredientes;
-            document.getElementById("alergenicos").value = item.alergenicos;
-            document.getElementById("altoEm").value = item.altoEm;
-            atualizarPreview();
-        };
-
-        div.appendChild(el);
-    });
-}
-
-function excluir(i) {
-    let lista = JSON.parse(localStorage.getItem("etiquetas")) || [];
-    lista.splice(i, 1);
-    localStorage.setItem("etiquetas", JSON.stringify(lista));
-    carregarLista();
-}
-
-function gerarIA() {
-    document.getElementById("ingredientes").value =
-        "Açúcar, farinha de trigo enriquecida, leite, ovos, gordura vegetal, fermento químico";
-
-    atualizarPreview();
-}
-
-// INIT
-carregarLista();
-atualizarPreview();
-</script>
-
-</body>
-</html><!DOCTYPE html>
-<html lang="pt-br">
-<head>
-<meta charset="UTF-8">
-<title>Gerador de Etiquetas</title>
-
-<style>
-body {
-    font-family: 'Segoe UI', sans-serif;
-    margin: 0;
-    background: #f6f8fb;
-    display: flex;
-}
-
-/* LAYOUT */
-.editor {
-    width: 70%;
-    padding: 25px;
-}
-
-.sidebar {
-    width: 30%;
-    background: #ffffff;
-    border-left: 1px solid #e5e7eb;
-    padding: 20px;
-    overflow-y: auto;
-}
-
-/* CARD */
-.card {
-    background: white;
-    border-radius: 14px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.05);
-}
-
-/* INPUTS */
-textarea, input, select {
-    width: 100%;
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    margin-top: 5px;
-    margin-bottom: 12px;
-    font-size: 14px;
-}
-
-textarea:focus, input:focus, select:focus {
-    outline: none;
-    border-color: #6366f1;
-}
-
-/* BOTÕES */
-button {
-    padding: 10px 14px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    margin-right: 8px;
-    margin-top: 10px;
-    font-weight: 500;
-}
-
-.btn-primary { background: #6366f1; color: white; }
-.btn-success { background: #10b981; color: white; }
-.btn-warning { background: #f59e0b; color: white; }
-.btn-print { background: #111827; color: white; }
-
-/* ETIQUETA */
-.label {
-    width: 40mm;
-    height: 40mm;
-    border-radius: 6px;
-    border: 1px solid #ddd;
-    background: white;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
-
-/* NOME GRANDE */
-.nome-grande {
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    font-weight: bold;
-    font-size: 22pt;
-    gap: 6px;
-}
-
-/* INGREDIENTES */
-.ingredientes {
-    font-size: 10pt;
-    justify-content: space-between;
-}
-
-.bloco {
-    margin-bottom: 3px;
-}
-
-.texto-ingredientes {
-    text-align: justify;
-}
-
-.alto-em {
-    font-weight: bold;
-}
-
-.alert {
-    background: #111;
-    color: white;
-    border-radius: 4px;
-    padding: 2px;
-    text-align: center;
-    font-weight: bold;
-}
-
-/* PREVIEW */
-.preview {
-    display: flex;
-    gap: 20px;
-}
-
-/* GRID */
-.print-area {
-    display: grid;
-    grid-template-columns: repeat(5, 40mm);
-    gap: 5mm;
-}
-
-/* SALVOS */
-.item-salvo {
-    background: #f9fafb;
-    padding: 10px;
-    border-radius: 10px;
-    margin-bottom: 10px;
-    cursor: pointer;
-    border: 1px solid #eee;
-}
-
-.item-salvo:hover {
-    background: #eef2ff;
-}
-
-/* PRINT */
-@media print {
-    .editor, .sidebar {
-        display: none;
-    }
-
-    body {
-        background: white;
-    }
-}
-</style>
-</head>
-
-<body>
-
-<div class="editor">
-    <h2>🏷️ Gerador de Etiquetas</h2>
-
-    <div class="card">
-
-        <label>Tipo</label>
-        <select id="tipoEtiqueta" onchange="atualizarPreview()">
-            <option value="nome">Nome grande</option>
-            <option value="ingredientes">Ingredientes</option>
-        </select>
-
-        <label>Ingredientes</label>
-        <textarea id="ingredientes" oninput="atualizarPreview()"></textarea>
-
-        <label>Alergênicos</label>
-        <textarea id="alergenicos" oninput="atualizarPreview()">ALÉRGICOS: CONTÉM
-DERIVADOS DO TRIGO, SOJA,
-LEITE E OVOS.
-Contém Glúten</textarea>
-
-        <label>Alto em</label>
-        <input id="altoEm" value="GORDURA SATURADA" oninput="atualizarPreview()">
-
-        <label>Margem (mm)</label>
-        <input type="number" id="margem" value="3" oninput="atualizarPreview()">
-
-        <label><input type="checkbox" id="autoFit" checked> Ajustar automaticamente</label>
-        <label><input type="checkbox" id="truncar"> Truncar</label>
-
-        <br>
-
-        <button class="btn-primary" onclick="gerarEtiqueta()">Gerar</button>
-        <button class="btn-success" onclick="salvar()">Salvar</button>
-        <button class="btn-warning" onclick="gerarIA()">IA</button>
-        <button class="btn-print" onclick="window.print()">Imprimir</button>
-
-    </div>
-
-    <div class="card">
-        <h3>Pré-visualização</h3>
-        <div id="preview" class="preview"></div>
-    </div>
-
-    <div id="printArea" class="print-area"></div>
-</div>
-
-<div class="sidebar">
-    <h3>📂 Salvos</h3>
-    <div id="listaSalvos"></div>
-</div>
-
-<script>
-function formatarLinhas(texto) {
-    return texto.split(/,|\\n/)
-        .map(p => "<div>" + p.trim().toUpperCase() + "</div>")
-        .join("");
-}
-
-function criarEtiquetaHTML() {
+function trocarTipo() {
     const tipo = document.getElementById("tipoEtiqueta").value;
-    const ingredientes = document.getElementById("ingredientes").value;
-    const alergenicos = document.getElementById("alergenicos").value;
-    const altoEm = document.getElementById("altoEm").value;
-    const margem = document.getElementById("margem").value;
 
-    const div = document.createElement("div");
-    div.className = "label";
-    div.style.padding = margem + "mm";
+    document.getElementById("grupoNome").style.display =
+        tipo === "nome" ? "block" : "none";
 
-    if (tipo === "nome") {
-        div.classList.add("nome-grande");
-        div.innerHTML = formatarLinhas(ingredientes);
-    }
+    document.getElementById("grupoIngredientes").style.display =
+        tipo === "ingredientes" ? "block" : "none";
 
-    if (tipo === "ingredientes") {
-        div.classList.add("ingredientes");
-
-        div.innerHTML = `
-            <div class="bloco texto-ingredientes">
-                <b>Ingredientes:</b> ${ingredientes}
-            </div>
-
-            <div class="bloco alert">
-                ${alergenicos.replace(/\\n/g, "<br>")}
-            </div>
-
-            <div class="bloco alto-em">ALTO EM:</div>
-
-            <div class="bloco alert">
-                ${altoEm}
-            </div>
-        `;
-    }
-
-    return div;
-}
-
-function ajustarFonteGlobal(el) {
-    let size = 12;
-    const min = 6;
-
-    el.style.fontSize = size + "pt";
-
-    while ((el.scrollHeight > el.clientHeight || el.scrollWidth > el.clientWidth) && size > min) {
-        size--;
-        el.style.fontSize = size + "pt";
-    }
-}
-
-function truncarGlobal(el) {
-    let texto = el.innerText;
-
-    while (el.scrollHeight > el.clientHeight) {
-        texto = texto.slice(0, -1);
-        el.innerText = texto + "...";
-    }
-}
-
-function aplicarAjustes(el) {
-    if (document.getElementById("autoFit").checked) {
-        ajustarFonteGlobal(el);
-    } else if (document.getElementById("truncar").checked) {
-        truncarGlobal(el);
-    }
-}
-
-function atualizarPreview() {
-    const preview = document.getElementById("preview");
-    preview.innerHTML = "";
-
-    const etiqueta = criarEtiquetaHTML();
-    preview.appendChild(etiqueta);
-
-    aplicarAjustes(etiqueta);
-}
-
-function gerarEtiqueta() {
-    const area = document.getElementById("printArea");
-    area.innerHTML = "";
-
-    for (let i = 0; i < 20; i++) {
-        const etiqueta = criarEtiquetaHTML();
-        area.appendChild(etiqueta);
-        aplicarAjustes(etiqueta);
-    }
+    atualizarPreview();
 }
 
 function salvar() {
     let lista = JSON.parse(localStorage.getItem("etiquetas")) || [];
+
     lista.push({
-        ingredientes: document.getElementById("ingredientes").value,
+        tipo: document.getElementById("tipoEtiqueta").value,
+        nome: document.getElementById("nomeTexto").value,
+        ingredientes: document.getElementById("ingredientesFull").value,
         alergenicos: document.getElementById("alergenicos").value,
         altoEm: document.getElementById("altoEm").value
     });
@@ -692,16 +354,19 @@ function carregarLista() {
         el.className = "item-salvo";
 
         el.innerHTML = `
-            ${item.ingredientes.substring(0, 40)}...
+            ${item.nome || item.ingredientes.substring(0, 40)}...
             <br>
             <button onclick="event.stopPropagation(); excluir(${i})">Excluir</button>
         `;
 
         el.onclick = () => {
-            document.getElementById("ingredientes").value = item.ingredientes;
+            document.getElementById("tipoEtiqueta").value = item.tipo;
+            document.getElementById("nomeTexto").value = item.nome;
+            document.getElementById("ingredientesFull").value = item.ingredientes;
             document.getElementById("alergenicos").value = item.alergenicos;
             document.getElementById("altoEm").value = item.altoEm;
-            atualizarPreview();
+
+            trocarTipo();
         };
 
         div.appendChild(el);
@@ -716,7 +381,8 @@ function excluir(i) {
 }
 
 function gerarIA() {
-    document.getElementById("ingredientes").value =
+    document.getElementById("nomeTexto").value = "BOLO DE CHOCOLATE\nBRIGADEIRO\nNINHO";
+    document.getElementById("ingredientesFull").value =
         "Açúcar, farinha de trigo enriquecida, leite, ovos, gordura vegetal, fermento químico";
 
     atualizarPreview();
@@ -724,7 +390,7 @@ function gerarIA() {
 
 // INIT
 carregarLista();
-atualizarPreview();
+trocarTipo();
 </script>
 
 </body>
