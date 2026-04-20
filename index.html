@@ -11,7 +11,7 @@ body {
     margin: 0;
 }
 
-/* LADO ESQUERDO (EDITOR) */
+/* EDITOR */
 .editor {
     width: 70%;
     padding: 20px;
@@ -22,7 +22,7 @@ textarea {
     height: 120px;
 }
 
-/* LADO DIREITO (SALVOS) */
+/* SIDEBAR */
 .sidebar {
     width: 30%;
     background: #f1f1f1;
@@ -43,32 +43,58 @@ textarea {
     background: #ddd;
 }
 
-/* PREVIEW */
-.preview {
-    margin-top: 20px;
-}
-
-/* ETIQUETA */
+/* ETIQUETA BASE */
 .label {
     width: 40mm;
     height: 40mm;
     border: 1px solid black;
     padding: 3mm;
     box-sizing: border-box;
-    font-size: 8pt;
+    background: white;
+    overflow: hidden;
+}
+
+/* NOME GRANDE */
+.nome-grande {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    text-align: center;
+    font-size: 22pt;
+    gap: 6px;
+}
+
+/* INGREDIENTES */
+.ingredientes {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    background: white;
+    font-size: 8pt;
+}
+
+.ingredientes-texto {
+    text-align: justify;
+}
+
+.alto-em {
+    font-weight: bold;
+    margin-top: 4px;
 }
 
 .alert {
     background: black;
     color: white;
     text-align: center;
-    font-size: 7pt;
-    padding: 2px;
     font-weight: bold;
+    padding: 2px;
+    font-size: 8pt;
+}
+
+/* PREVIEW */
+.preview {
+    margin-top: 20px;
 }
 
 /* IMPRESSÃO */
@@ -79,7 +105,7 @@ textarea {
 }
 
 @media print {
-    .sidebar, .controls, h2, textarea {
+    .sidebar, .controls, h2, textarea, select, label {
         display: none;
     }
 
@@ -92,11 +118,33 @@ textarea {
 
 <body>
 
-<!-- EDITOR -->
 <div class="editor">
     <h2>Gerador de Etiquetas</h2>
 
     <div class="controls">
+
+        <label>Tipo de etiqueta:</label>
+        <select id="tipoEtiqueta" onchange="atualizarPreview()">
+            <option value="nome">Nome grande</option>
+            <option value="ingredientes">Ingredientes</option>
+        </select>
+
+        <br><br>
+
+        <label>
+            <input type="checkbox" id="autoFit" checked>
+            Ajustar fonte automaticamente
+        </label>
+
+        <br>
+
+        <label>
+            <input type="checkbox" id="truncar">
+            Truncar texto
+        </label>
+
+        <br><br>
+
         <textarea id="ingredientes" oninput="atualizarPreview()"></textarea><br>
 
         <button onclick="gerarEtiqueta()">Gerar para impressão</button>
@@ -111,94 +159,148 @@ textarea {
     <div class="print-area" id="printArea"></div>
 </div>
 
-<!-- SIDEBAR -->
 <div class="sidebar">
     <h3>Salvos</h3>
     <div id="listaSalvos"></div>
 </div>
 
 <script>
-// Atualiza preview em tempo real
-function atualizarPreview() {
-    const texto = document.getElementById("ingredientes").value;
-
-    const preview = document.getElementById("preview");
-
-    preview.innerHTML = `
-        <div class="label">
-            <div><b>Ingredientes:</b> ${texto}</div>
-
-            <div class="alert">
-                ALÉRGICOS: CONTÉM<br>
-                TRIGO, SOJA,<br>
-                LEITE E OVOS
-            </div>
-
-            <div class="alert">
-                ALTO EM:<br>
-                GORDURA SATURADA
-            </div>
-        </div>
-    `;
+// FORMATAR LINHAS
+function formatarLinhas(texto) {
+    let partes = texto.split(/,|\n/);
+    return partes.map(p => `<div>${p.trim().toUpperCase()}</div>`).join("");
 }
 
-// Gera várias etiquetas
-function gerarEtiqueta() {
-    const texto = document.getElementById("ingredientes").value;
-    const area = document.getElementById("printArea");
-    area.innerHTML = "";
+// CRIAR ETIQUETA
+function criarEtiquetaHTML(texto) {
+    const tipo = document.getElementById("tipoEtiqueta").value;
 
-    for (let i = 0; i < 20; i++) {
-        const div = document.createElement("div");
-        div.className = "label";
+    const div = document.createElement("div");
+    div.className = "label";
+
+    if (tipo === "nome") {
+        div.classList.add("nome-grande");
+        div.innerHTML = formatarLinhas(texto);
+    }
+
+    if (tipo === "ingredientes") {
+        div.classList.add("ingredientes");
 
         div.innerHTML = `
-            <div><b>Ingredientes:</b> ${texto}</div>
-
-            <div class="alert">
-                ALÉRGICOS: CONTÉM<br>
-                TRIGO, SOJA,<br>
-                LEITE E OVOS
+            <div class="ingredientes-texto">
+                <b>Ingredientes:</b> ${texto}
             </div>
 
             <div class="alert">
-                ALTO EM:<br>
+                ALÉRGICOS: CONTÉM<br>
+                DERIVADOS DO TRIGO, SOJA,<br>
+                LEITE E OVOS.<br>
+                Contém Glúten
+            </div>
+
+            <div class="alto-em">ALTO EM:</div>
+
+            <div class="alert">
                 GORDURA SATURADA
             </div>
         `;
+    }
 
-        area.appendChild(div);
+    return div;
+}
+
+// AJUSTE FONTE
+function ajustarFonte(el) {
+    let size = 22;
+    const min = 8;
+
+    el.style.fontSize = size + "pt";
+
+    while ((el.scrollHeight > el.clientHeight || el.scrollWidth > el.clientWidth) && size > min) {
+        size--;
+        el.style.fontSize = size + "pt";
     }
 }
 
-// Salvar
+// TRUNCAR
+function truncarTexto(el) {
+    let texto = el.innerText;
+
+    while (el.scrollHeight > el.clientHeight) {
+        texto = texto.slice(0, -1);
+        el.innerText = texto + "...";
+    }
+}
+
+// APLICAR AJUSTES
+function aplicarAjustes(el) {
+    const autoFit = document.getElementById("autoFit").checked;
+    const truncar = document.getElementById("truncar").checked;
+
+    if (el.classList.contains("ingredientes")) {
+        const texto = el.querySelector(".ingredientes-texto");
+
+        if (autoFit) ajustarFonte(texto);
+        else if (truncar) truncarTexto(texto);
+    } else {
+        if (autoFit) ajustarFonte(el);
+        else if (truncar) truncarTexto(el);
+    }
+}
+
+// PREVIEW
+function atualizarPreview() {
+    const texto = document.getElementById("ingredientes").value;
+    const preview = document.getElementById("preview");
+
+    preview.innerHTML = "";
+
+    const etiqueta = criarEtiquetaHTML(texto);
+    preview.appendChild(etiqueta);
+
+    aplicarAjustes(etiqueta);
+}
+
+// GERAR IMPRESSÃO
+function gerarEtiqueta() {
+    const texto = document.getElementById("ingredientes").value;
+    const area = document.getElementById("printArea");
+
+    area.innerHTML = "";
+
+    for (let i = 0; i < 20; i++) {
+        const etiqueta = criarEtiquetaHTML(texto);
+        area.appendChild(etiqueta);
+        aplicarAjustes(etiqueta);
+    }
+}
+
+// SALVAR
 function salvar() {
     let lista = JSON.parse(localStorage.getItem("etiquetas")) || [];
 
-    const texto = document.getElementById("ingredientes").value;
-
-    lista.push(texto);
+    lista.push(document.getElementById("ingredientes").value);
 
     localStorage.setItem("etiquetas", JSON.stringify(lista));
 
     carregarLista();
 }
 
-// Carregar lista lateral
+// LISTA
 function carregarLista() {
     let lista = JSON.parse(localStorage.getItem("etiquetas")) || [];
 
     const div = document.getElementById("listaSalvos");
     div.innerHTML = "";
 
-    lista.forEach((item, index) => {
+    lista.forEach((item, i) => {
         const el = document.createElement("div");
         el.className = "item-salvo";
 
         el.innerHTML = `
-            ${item.substring(0, 80)}...
-            <br><br>
-            <button onclick="event.stopPropagation(); excluir(${index})">Excluir</button>
+            ${item.substring(0, 60)}...
+            <br>
+            <button onclick="event.stopPropagation(); excluir(${i})">Excluir</button>
         `;
 
         el.onclick = () => {
@@ -210,34 +312,27 @@ function carregarLista() {
     });
 }
 
-// Excluir
-function excluir(index) {
+// EXCLUIR
+function excluir(i) {
     let lista = JSON.parse(localStorage.getItem("etiquetas")) || [];
-
-    lista.splice(index, 1);
-
+    lista.splice(i, 1);
     localStorage.setItem("etiquetas", JSON.stringify(lista));
-
     carregarLista();
 }
 
-// IA simulada
-async function gerarIA() {
-    const prompt = prompt("Produto:");
+// IA SIMULADA
+function gerarIA() {
+    const produto = prompt("Nome do produto:");
 
-    if (!prompt) return;
+    if (!produto) return;
 
-    const texto = `
-Farinha de trigo enriquecida, açúcar, ovos, leite,
-gordura vegetal, fermento químico e aroma natural.
-`;
-
-    document.getElementById("ingredientes").value = texto;
+    document.getElementById("ingredientes").value =
+        "Açúcar, farinha de trigo enriquecida, leite, ovos, gordura vegetal, fermento químico";
 
     atualizarPreview();
 }
 
-// Inicializar
+// INIT
 carregarLista();
 atualizarPreview();
 </script>
