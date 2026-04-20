@@ -5,94 +5,146 @@
 <title>Etiquetas 40x40</title>
 
 <style>
+body {
+    font-family: Arial;
+    display: flex;
+    margin: 0;
+}
+
+/* LADO ESQUERDO (EDITOR) */
+.editor {
+    width: 70%;
+    padding: 20px;
+}
+
+textarea {
+    width: 100%;
+    height: 120px;
+}
+
+/* LADO DIREITO (SALVOS) */
+.sidebar {
+    width: 30%;
+    background: #f1f1f1;
+    padding: 10px;
+    overflow-y: auto;
+}
+
+.item-salvo {
+    background: white;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.item-salvo:hover {
+    background: #ddd;
+}
+
+/* PREVIEW */
+.preview {
+    margin-top: 20px;
+}
+
+/* ETIQUETA */
+.label {
+    width: 40mm;
+    height: 40mm;
+    border: 1px solid black;
+    padding: 3mm;
+    box-sizing: border-box;
+    font-size: 8pt;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: white;
+}
+
+.alert {
+    background: black;
+    color: white;
+    text-align: center;
+    font-size: 7pt;
+    padding: 2px;
+    font-weight: bold;
+}
+
+/* IMPRESSÃO */
+.print-area {
+    display: grid;
+    grid-template-columns: repeat(5, 40mm);
+    gap: 5mm;
+}
+
+@media print {
+    .sidebar, .controls, h2, textarea {
+        display: none;
+    }
+
     body {
-        font-family: Arial, sans-serif;
-        padding: 20px;
-        background: #f5f5f5;
+        display: block;
     }
-
-    .controls {
-        margin-bottom: 20px;
-    }
-
-    textarea {
-        width: 100%;
-        height: 120px;
-    }
-
-    button {
-        margin-top: 10px;
-        padding: 10px;
-        cursor: pointer;
-    }
-
-    /* Área de impressão */
-    .print-area {
-        display: grid;
-        grid-template-columns: repeat(5, 40mm);
-        gap: 5mm;
-    }
-
-    .label {
-        width: 40mm;
-        height: 40mm;
-        border: 1px solid #000;
-        padding: 3mm;
-        box-sizing: border-box;
-        font-size: 8pt;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        background: white;
-    }
-
-    .alert {
-        background: black;
-        color: white;
-        font-weight: bold;
-        text-align: center;
-        padding: 2px;
-        font-size: 7pt;
-    }
-
-    .small {
-        font-size: 7pt;
-    }
-
-    @media print {
-        body {
-            background: white;
-        }
-        .controls {
-            display: none;
-        }
-    }
+}
 </style>
 </head>
 
 <body>
 
-<h2>Gerador de Etiquetas 40x40</h2>
+<!-- EDITOR -->
+<div class="editor">
+    <h2>Gerador de Etiquetas</h2>
 
-<div class="controls">
-    <label>Ingredientes:</label>
-    <textarea id="ingredientes"></textarea>
+    <div class="controls">
+        <textarea id="ingredientes" oninput="atualizarPreview()"></textarea><br>
 
-    <br>
+        <button onclick="gerarEtiqueta()">Gerar para impressão</button>
+        <button onclick="salvar()">Salvar</button>
+        <button onclick="gerarIA()">Gerar com IA</button>
+        <button onclick="window.print()">Imprimir</button>
+    </div>
 
-    <button onclick="gerarEtiqueta()">Gerar Etiquetas</button>
-    <button onclick="salvar()">Salvar</button>
-    <button onclick="carregar()">Carregar</button>
-    <button onclick="gerarIA()">Gerar com IA</button>
-    <button onclick="window.print()">Imprimir</button>
+    <h3>Pré-visualização</h3>
+    <div class="preview" id="preview"></div>
+
+    <div class="print-area" id="printArea"></div>
 </div>
 
-<div class="print-area" id="printArea"></div>
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <h3>Salvos</h3>
+    <div id="listaSalvos"></div>
+</div>
 
 <script>
-function gerarEtiqueta() {
+// Atualiza preview em tempo real
+function atualizarPreview() {
     const texto = document.getElementById("ingredientes").value;
 
+    const preview = document.getElementById("preview");
+
+    preview.innerHTML = `
+        <div class="label">
+            <div><b>Ingredientes:</b> ${texto}</div>
+
+            <div class="alert">
+                ALÉRGICOS: CONTÉM<br>
+                TRIGO, SOJA,<br>
+                LEITE E OVOS
+            </div>
+
+            <div class="alert">
+                ALTO EM:<br>
+                GORDURA SATURADA
+            </div>
+        </div>
+    `;
+}
+
+// Gera várias etiquetas
+function gerarEtiqueta() {
+    const texto = document.getElementById("ingredientes").value;
     const area = document.getElementById("printArea");
     area.innerHTML = "";
 
@@ -101,9 +153,7 @@ function gerarEtiqueta() {
         div.className = "label";
 
         div.innerHTML = `
-            <div class="small">
-                <b>Ingredientes:</b> ${texto}
-            </div>
+            <div><b>Ingredientes:</b> ${texto}</div>
 
             <div class="alert">
                 ALÉRGICOS: CONTÉM<br>
@@ -121,31 +171,75 @@ function gerarEtiqueta() {
     }
 }
 
-// Salvar no navegador
+// Salvar
 function salvar() {
-    localStorage.setItem("etiqueta", document.getElementById("ingredientes").value);
-    alert("Salvo!");
+    let lista = JSON.parse(localStorage.getItem("etiquetas")) || [];
+
+    const texto = document.getElementById("ingredientes").value;
+
+    lista.push(texto);
+
+    localStorage.setItem("etiquetas", JSON.stringify(lista));
+
+    carregarLista();
 }
 
-// Carregar
-function carregar() {
-    document.getElementById("ingredientes").value = localStorage.getItem("etiqueta") || "";
+// Carregar lista lateral
+function carregarLista() {
+    let lista = JSON.parse(localStorage.getItem("etiquetas")) || [];
+
+    const div = document.getElementById("listaSalvos");
+    div.innerHTML = "";
+
+    lista.forEach((item, index) => {
+        const el = document.createElement("div");
+        el.className = "item-salvo";
+
+        el.innerHTML = `
+            ${item.substring(0, 80)}...
+            <br><br>
+            <button onclick="event.stopPropagation(); excluir(${index})">Excluir</button>
+        `;
+
+        el.onclick = () => {
+            document.getElementById("ingredientes").value = item;
+            atualizarPreview();
+        };
+
+        div.appendChild(el);
+    });
 }
 
-// Simulação IA (você pode integrar com API depois)
+// Excluir
+function excluir(index) {
+    let lista = JSON.parse(localStorage.getItem("etiquetas")) || [];
+
+    lista.splice(index, 1);
+
+    localStorage.setItem("etiquetas", JSON.stringify(lista));
+
+    carregarLista();
+}
+
+// IA simulada
 async function gerarIA() {
-    const prompt = prompt("Descreva o produto (ex: bolo de chocolate):");
+    const prompt = prompt("Produto:");
 
     if (!prompt) return;
 
-    // Aqui você pode trocar por API real (OpenAI, etc)
-    const resultado = `
-Farinha de trigo enriquecida, açúcar, ovos, leite integral,
-chocolate em pó, manteiga, fermento químico e aroma idêntico ao natural.
+    const texto = `
+Farinha de trigo enriquecida, açúcar, ovos, leite,
+gordura vegetal, fermento químico e aroma natural.
 `;
 
-    document.getElementById("ingredientes").value = resultado;
+    document.getElementById("ingredientes").value = texto;
+
+    atualizarPreview();
 }
+
+// Inicializar
+carregarLista();
+atualizarPreview();
 </script>
 
 </body>
