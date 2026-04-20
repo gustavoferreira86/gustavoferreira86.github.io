@@ -2,115 +2,155 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>Etiquetas 40x40</title>
+<title>Gerador de Etiquetas</title>
 
 <style>
 body {
-    font-family: Arial;
-    display: flex;
+    font-family: 'Segoe UI', sans-serif;
     margin: 0;
+    background: #f6f8fb;
+    display: flex;
 }
 
-/* EDITOR */
+/* LAYOUT */
 .editor {
     width: 70%;
-    padding: 20px;
+    padding: 25px;
 }
 
-textarea {
-    width: 100%;
-    height: 120px;
-}
-
-/* SIDEBAR */
 .sidebar {
     width: 30%;
-    background: #f1f1f1;
-    padding: 10px;
+    background: #ffffff;
+    border-left: 1px solid #e5e7eb;
+    padding: 20px;
     overflow-y: auto;
 }
 
-.item-salvo {
+/* CARD */
+.card {
     background: white;
-    padding: 8px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+}
+
+/* INPUTS */
+textarea, input, select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    margin-top: 5px;
+    margin-bottom: 12px;
+    font-size: 14px;
+}
+
+textarea:focus, input:focus, select:focus {
+    outline: none;
+    border-color: #6366f1;
+}
+
+/* BOTÕES */
+button {
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: none;
     cursor: pointer;
-    font-size: 12px;
+    margin-right: 8px;
+    margin-top: 10px;
+    font-weight: 500;
 }
 
-.item-salvo:hover {
-    background: #ddd;
-}
+.btn-primary { background: #6366f1; color: white; }
+.btn-success { background: #10b981; color: white; }
+.btn-warning { background: #f59e0b; color: white; }
+.btn-print { background: #111827; color: white; }
 
-/* ETIQUETA BASE */
+/* ETIQUETA */
 .label {
     width: 40mm;
     height: 40mm;
-    border: 1px solid black;
-    padding: 3mm;
-    box-sizing: border-box;
+    border-radius: 6px;
+    border: 1px solid #ddd;
     background: white;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 /* NOME GRANDE */
 .nome-grande {
-    display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
-    font-weight: bold;
     text-align: center;
+    font-weight: bold;
     font-size: 22pt;
     gap: 6px;
 }
 
 /* INGREDIENTES */
 .ingredientes {
-    display: flex;
-    flex-direction: column;
+    font-size: 10pt;
     justify-content: space-between;
-    font-size: 8pt;
 }
 
-.ingredientes-texto {
+.bloco {
+    margin-bottom: 3px;
+}
+
+.texto-ingredientes {
     text-align: justify;
 }
 
 .alto-em {
     font-weight: bold;
-    margin-top: 4px;
 }
 
 .alert {
-    background: black;
+    background: #111;
     color: white;
+    border-radius: 4px;
+    padding: 2px;
     text-align: center;
     font-weight: bold;
-    padding: 2px;
-    font-size: 8pt;
 }
 
 /* PREVIEW */
 .preview {
-    margin-top: 20px;
+    display: flex;
+    gap: 20px;
 }
 
-/* IMPRESSÃO */
+/* GRID */
 .print-area {
     display: grid;
     grid-template-columns: repeat(5, 40mm);
     gap: 5mm;
 }
 
+/* SALVOS */
+.item-salvo {
+    background: #f9fafb;
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    border: 1px solid #eee;
+}
+
+.item-salvo:hover {
+    background: #eef2ff;
+}
+
+/* PRINT */
 @media print {
-    .sidebar, .controls, h2, textarea, select, label {
+    .editor, .sidebar {
         display: none;
     }
 
     body {
-        display: block;
+        background: white;
     }
 }
 </style>
@@ -119,89 +159,95 @@ textarea {
 <body>
 
 <div class="editor">
-    <h2>Gerador de Etiquetas</h2>
+    <h2>🏷️ Gerador de Etiquetas</h2>
 
-    <div class="controls">
+    <div class="card">
 
-        <label>Tipo de etiqueta:</label>
+        <label>Tipo</label>
         <select id="tipoEtiqueta" onchange="atualizarPreview()">
             <option value="nome">Nome grande</option>
             <option value="ingredientes">Ingredientes</option>
         </select>
 
-        <br><br>
+        <label>Ingredientes</label>
+        <textarea id="ingredientes" oninput="atualizarPreview()"></textarea>
 
-        <label>
-            <input type="checkbox" id="autoFit" checked>
-            Ajustar fonte automaticamente
-        </label>
+        <label>Alergênicos</label>
+        <textarea id="alergenicos" oninput="atualizarPreview()">ALÉRGICOS: CONTÉM
+DERIVADOS DO TRIGO, SOJA,
+LEITE E OVOS.
+Contém Glúten</textarea>
+
+        <label>Alto em</label>
+        <input id="altoEm" value="GORDURA SATURADA" oninput="atualizarPreview()">
+
+        <label>Margem (mm)</label>
+        <input type="number" id="margem" value="3" oninput="atualizarPreview()">
+
+        <label><input type="checkbox" id="autoFit" checked> Ajustar automaticamente</label>
+        <label><input type="checkbox" id="truncar"> Truncar</label>
 
         <br>
 
-        <label>
-            <input type="checkbox" id="truncar">
-            Truncar texto
-        </label>
+        <button class="btn-primary" onclick="gerarEtiqueta()">Gerar</button>
+        <button class="btn-success" onclick="salvar()">Salvar</button>
+        <button class="btn-warning" onclick="gerarIA()">IA</button>
+        <button class="btn-print" onclick="window.print()">Imprimir</button>
 
-        <br><br>
-
-        <textarea id="ingredientes" oninput="atualizarPreview()"></textarea><br>
-
-        <button onclick="gerarEtiqueta()">Gerar para impressão</button>
-        <button onclick="salvar()">Salvar</button>
-        <button onclick="gerarIA()">Gerar com IA</button>
-        <button onclick="window.print()">Imprimir</button>
     </div>
 
-    <h3>Pré-visualização</h3>
-    <div class="preview" id="preview"></div>
+    <div class="card">
+        <h3>Pré-visualização</h3>
+        <div id="preview" class="preview"></div>
+    </div>
 
-    <div class="print-area" id="printArea"></div>
+    <div id="printArea" class="print-area"></div>
 </div>
 
 <div class="sidebar">
-    <h3>Salvos</h3>
+    <h3>📂 Salvos</h3>
     <div id="listaSalvos"></div>
 </div>
 
 <script>
-// FORMATAR LINHAS
 function formatarLinhas(texto) {
-    let partes = texto.split(/,|\n/);
-    return partes.map(p => `<div>${p.trim().toUpperCase()}</div>`).join("");
+    return texto.split(/,|\\n/)
+        .map(p => "<div>" + p.trim().toUpperCase() + "</div>")
+        .join("");
 }
 
-// CRIAR ETIQUETA
-function criarEtiquetaHTML(texto) {
+function criarEtiquetaHTML() {
     const tipo = document.getElementById("tipoEtiqueta").value;
+    const ingredientes = document.getElementById("ingredientes").value;
+    const alergenicos = document.getElementById("alergenicos").value;
+    const altoEm = document.getElementById("altoEm").value;
+    const margem = document.getElementById("margem").value;
 
     const div = document.createElement("div");
     div.className = "label";
+    div.style.padding = margem + "mm";
 
     if (tipo === "nome") {
         div.classList.add("nome-grande");
-        div.innerHTML = formatarLinhas(texto);
+        div.innerHTML = formatarLinhas(ingredientes);
     }
 
     if (tipo === "ingredientes") {
         div.classList.add("ingredientes");
 
         div.innerHTML = `
-            <div class="ingredientes-texto">
-                <b>Ingredientes:</b> ${texto}
+            <div class="bloco texto-ingredientes">
+                <b>Ingredientes:</b> ${ingredientes}
             </div>
 
-            <div class="alert">
-                ALÉRGICOS: CONTÉM<br>
-                DERIVADOS DO TRIGO, SOJA,<br>
-                LEITE E OVOS.<br>
-                Contém Glúten
+            <div class="bloco alert">
+                ${alergenicos.replace(/\\n/g, "<br>")}
             </div>
 
-            <div class="alto-em">ALTO EM:</div>
+            <div class="bloco alto-em">ALTO EM:</div>
 
-            <div class="alert">
-                GORDURA SATURADA
+            <div class="bloco alert">
+                ${altoEm}
             </div>
         `;
     }
@@ -209,10 +255,9 @@ function criarEtiquetaHTML(texto) {
     return div;
 }
 
-// AJUSTE FONTE
-function ajustarFonte(el) {
-    let size = 22;
-    const min = 8;
+function ajustarFonteGlobal(el) {
+    let size = 12;
+    const min = 6;
 
     el.style.fontSize = size + "pt";
 
@@ -222,8 +267,7 @@ function ajustarFonte(el) {
     }
 }
 
-// TRUNCAR
-function truncarTexto(el) {
+function truncarGlobal(el) {
     let texto = el.innerText;
 
     while (el.scrollHeight > el.clientHeight) {
@@ -232,64 +276,49 @@ function truncarTexto(el) {
     }
 }
 
-// APLICAR AJUSTES
 function aplicarAjustes(el) {
-    const autoFit = document.getElementById("autoFit").checked;
-    const truncar = document.getElementById("truncar").checked;
-
-    if (el.classList.contains("ingredientes")) {
-        const texto = el.querySelector(".ingredientes-texto");
-
-        if (autoFit) ajustarFonte(texto);
-        else if (truncar) truncarTexto(texto);
-    } else {
-        if (autoFit) ajustarFonte(el);
-        else if (truncar) truncarTexto(el);
+    if (document.getElementById("autoFit").checked) {
+        ajustarFonteGlobal(el);
+    } else if (document.getElementById("truncar").checked) {
+        truncarGlobal(el);
     }
 }
 
-// PREVIEW
 function atualizarPreview() {
-    const texto = document.getElementById("ingredientes").value;
     const preview = document.getElementById("preview");
-
     preview.innerHTML = "";
 
-    const etiqueta = criarEtiquetaHTML(texto);
+    const etiqueta = criarEtiquetaHTML();
     preview.appendChild(etiqueta);
 
     aplicarAjustes(etiqueta);
 }
 
-// GERAR IMPRESSÃO
 function gerarEtiqueta() {
-    const texto = document.getElementById("ingredientes").value;
     const area = document.getElementById("printArea");
-
     area.innerHTML = "";
 
     for (let i = 0; i < 20; i++) {
-        const etiqueta = criarEtiquetaHTML(texto);
+        const etiqueta = criarEtiquetaHTML();
         area.appendChild(etiqueta);
         aplicarAjustes(etiqueta);
     }
 }
 
-// SALVAR
 function salvar() {
     let lista = JSON.parse(localStorage.getItem("etiquetas")) || [];
-
-    lista.push(document.getElementById("ingredientes").value);
+    lista.push({
+        ingredientes: document.getElementById("ingredientes").value,
+        alergenicos: document.getElementById("alergenicos").value,
+        altoEm: document.getElementById("altoEm").value
+    });
 
     localStorage.setItem("etiquetas", JSON.stringify(lista));
-
     carregarLista();
 }
 
-// LISTA
 function carregarLista() {
     let lista = JSON.parse(localStorage.getItem("etiquetas")) || [];
-
     const div = document.getElementById("listaSalvos");
     div.innerHTML = "";
 
@@ -298,13 +327,15 @@ function carregarLista() {
         el.className = "item-salvo";
 
         el.innerHTML = `
-            ${item.substring(0, 60)}...
+            ${item.ingredientes.substring(0, 40)}...
             <br>
             <button onclick="event.stopPropagation(); excluir(${i})">Excluir</button>
         `;
 
         el.onclick = () => {
-            document.getElementById("ingredientes").value = item;
+            document.getElementById("ingredientes").value = item.ingredientes;
+            document.getElementById("alergenicos").value = item.alergenicos;
+            document.getElementById("altoEm").value = item.altoEm;
             atualizarPreview();
         };
 
@@ -312,7 +343,6 @@ function carregarLista() {
     });
 }
 
-// EXCLUIR
 function excluir(i) {
     let lista = JSON.parse(localStorage.getItem("etiquetas")) || [];
     lista.splice(i, 1);
@@ -320,12 +350,372 @@ function excluir(i) {
     carregarLista();
 }
 
-// IA SIMULADA
 function gerarIA() {
-    const produto = prompt("Nome do produto:");
+    document.getElementById("ingredientes").value =
+        "Açúcar, farinha de trigo enriquecida, leite, ovos, gordura vegetal, fermento químico";
 
-    if (!produto) return;
+    atualizarPreview();
+}
 
+// INIT
+carregarLista();
+atualizarPreview();
+</script>
+
+</body>
+</html><!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Gerador de Etiquetas</title>
+
+<style>
+body {
+    font-family: 'Segoe UI', sans-serif;
+    margin: 0;
+    background: #f6f8fb;
+    display: flex;
+}
+
+/* LAYOUT */
+.editor {
+    width: 70%;
+    padding: 25px;
+}
+
+.sidebar {
+    width: 30%;
+    background: #ffffff;
+    border-left: 1px solid #e5e7eb;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+/* CARD */
+.card {
+    background: white;
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+}
+
+/* INPUTS */
+textarea, input, select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    margin-top: 5px;
+    margin-bottom: 12px;
+    font-size: 14px;
+}
+
+textarea:focus, input:focus, select:focus {
+    outline: none;
+    border-color: #6366f1;
+}
+
+/* BOTÕES */
+button {
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    margin-right: 8px;
+    margin-top: 10px;
+    font-weight: 500;
+}
+
+.btn-primary { background: #6366f1; color: white; }
+.btn-success { background: #10b981; color: white; }
+.btn-warning { background: #f59e0b; color: white; }
+.btn-print { background: #111827; color: white; }
+
+/* ETIQUETA */
+.label {
+    width: 40mm;
+    height: 40mm;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    background: white;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* NOME GRANDE */
+.nome-grande {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    font-weight: bold;
+    font-size: 22pt;
+    gap: 6px;
+}
+
+/* INGREDIENTES */
+.ingredientes {
+    font-size: 10pt;
+    justify-content: space-between;
+}
+
+.bloco {
+    margin-bottom: 3px;
+}
+
+.texto-ingredientes {
+    text-align: justify;
+}
+
+.alto-em {
+    font-weight: bold;
+}
+
+.alert {
+    background: #111;
+    color: white;
+    border-radius: 4px;
+    padding: 2px;
+    text-align: center;
+    font-weight: bold;
+}
+
+/* PREVIEW */
+.preview {
+    display: flex;
+    gap: 20px;
+}
+
+/* GRID */
+.print-area {
+    display: grid;
+    grid-template-columns: repeat(5, 40mm);
+    gap: 5mm;
+}
+
+/* SALVOS */
+.item-salvo {
+    background: #f9fafb;
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    border: 1px solid #eee;
+}
+
+.item-salvo:hover {
+    background: #eef2ff;
+}
+
+/* PRINT */
+@media print {
+    .editor, .sidebar {
+        display: none;
+    }
+
+    body {
+        background: white;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="editor">
+    <h2>🏷️ Gerador de Etiquetas</h2>
+
+    <div class="card">
+
+        <label>Tipo</label>
+        <select id="tipoEtiqueta" onchange="atualizarPreview()">
+            <option value="nome">Nome grande</option>
+            <option value="ingredientes">Ingredientes</option>
+        </select>
+
+        <label>Ingredientes</label>
+        <textarea id="ingredientes" oninput="atualizarPreview()"></textarea>
+
+        <label>Alergênicos</label>
+        <textarea id="alergenicos" oninput="atualizarPreview()">ALÉRGICOS: CONTÉM
+DERIVADOS DO TRIGO, SOJA,
+LEITE E OVOS.
+Contém Glúten</textarea>
+
+        <label>Alto em</label>
+        <input id="altoEm" value="GORDURA SATURADA" oninput="atualizarPreview()">
+
+        <label>Margem (mm)</label>
+        <input type="number" id="margem" value="3" oninput="atualizarPreview()">
+
+        <label><input type="checkbox" id="autoFit" checked> Ajustar automaticamente</label>
+        <label><input type="checkbox" id="truncar"> Truncar</label>
+
+        <br>
+
+        <button class="btn-primary" onclick="gerarEtiqueta()">Gerar</button>
+        <button class="btn-success" onclick="salvar()">Salvar</button>
+        <button class="btn-warning" onclick="gerarIA()">IA</button>
+        <button class="btn-print" onclick="window.print()">Imprimir</button>
+
+    </div>
+
+    <div class="card">
+        <h3>Pré-visualização</h3>
+        <div id="preview" class="preview"></div>
+    </div>
+
+    <div id="printArea" class="print-area"></div>
+</div>
+
+<div class="sidebar">
+    <h3>📂 Salvos</h3>
+    <div id="listaSalvos"></div>
+</div>
+
+<script>
+function formatarLinhas(texto) {
+    return texto.split(/,|\\n/)
+        .map(p => "<div>" + p.trim().toUpperCase() + "</div>")
+        .join("");
+}
+
+function criarEtiquetaHTML() {
+    const tipo = document.getElementById("tipoEtiqueta").value;
+    const ingredientes = document.getElementById("ingredientes").value;
+    const alergenicos = document.getElementById("alergenicos").value;
+    const altoEm = document.getElementById("altoEm").value;
+    const margem = document.getElementById("margem").value;
+
+    const div = document.createElement("div");
+    div.className = "label";
+    div.style.padding = margem + "mm";
+
+    if (tipo === "nome") {
+        div.classList.add("nome-grande");
+        div.innerHTML = formatarLinhas(ingredientes);
+    }
+
+    if (tipo === "ingredientes") {
+        div.classList.add("ingredientes");
+
+        div.innerHTML = `
+            <div class="bloco texto-ingredientes">
+                <b>Ingredientes:</b> ${ingredientes}
+            </div>
+
+            <div class="bloco alert">
+                ${alergenicos.replace(/\\n/g, "<br>")}
+            </div>
+
+            <div class="bloco alto-em">ALTO EM:</div>
+
+            <div class="bloco alert">
+                ${altoEm}
+            </div>
+        `;
+    }
+
+    return div;
+}
+
+function ajustarFonteGlobal(el) {
+    let size = 12;
+    const min = 6;
+
+    el.style.fontSize = size + "pt";
+
+    while ((el.scrollHeight > el.clientHeight || el.scrollWidth > el.clientWidth) && size > min) {
+        size--;
+        el.style.fontSize = size + "pt";
+    }
+}
+
+function truncarGlobal(el) {
+    let texto = el.innerText;
+
+    while (el.scrollHeight > el.clientHeight) {
+        texto = texto.slice(0, -1);
+        el.innerText = texto + "...";
+    }
+}
+
+function aplicarAjustes(el) {
+    if (document.getElementById("autoFit").checked) {
+        ajustarFonteGlobal(el);
+    } else if (document.getElementById("truncar").checked) {
+        truncarGlobal(el);
+    }
+}
+
+function atualizarPreview() {
+    const preview = document.getElementById("preview");
+    preview.innerHTML = "";
+
+    const etiqueta = criarEtiquetaHTML();
+    preview.appendChild(etiqueta);
+
+    aplicarAjustes(etiqueta);
+}
+
+function gerarEtiqueta() {
+    const area = document.getElementById("printArea");
+    area.innerHTML = "";
+
+    for (let i = 0; i < 20; i++) {
+        const etiqueta = criarEtiquetaHTML();
+        area.appendChild(etiqueta);
+        aplicarAjustes(etiqueta);
+    }
+}
+
+function salvar() {
+    let lista = JSON.parse(localStorage.getItem("etiquetas")) || [];
+    lista.push({
+        ingredientes: document.getElementById("ingredientes").value,
+        alergenicos: document.getElementById("alergenicos").value,
+        altoEm: document.getElementById("altoEm").value
+    });
+
+    localStorage.setItem("etiquetas", JSON.stringify(lista));
+    carregarLista();
+}
+
+function carregarLista() {
+    let lista = JSON.parse(localStorage.getItem("etiquetas")) || [];
+    const div = document.getElementById("listaSalvos");
+    div.innerHTML = "";
+
+    lista.forEach((item, i) => {
+        const el = document.createElement("div");
+        el.className = "item-salvo";
+
+        el.innerHTML = `
+            ${item.ingredientes.substring(0, 40)}...
+            <br>
+            <button onclick="event.stopPropagation(); excluir(${i})">Excluir</button>
+        `;
+
+        el.onclick = () => {
+            document.getElementById("ingredientes").value = item.ingredientes;
+            document.getElementById("alergenicos").value = item.alergenicos;
+            document.getElementById("altoEm").value = item.altoEm;
+            atualizarPreview();
+        };
+
+        div.appendChild(el);
+    });
+}
+
+function excluir(i) {
+    let lista = JSON.parse(localStorage.getItem("etiquetas")) || [];
+    lista.splice(i, 1);
+    localStorage.setItem("etiquetas", JSON.stringify(lista));
+    carregarLista();
+}
+
+function gerarIA() {
     document.getElementById("ingredientes").value =
         "Açúcar, farinha de trigo enriquecida, leite, ovos, gordura vegetal, fermento químico";
 
