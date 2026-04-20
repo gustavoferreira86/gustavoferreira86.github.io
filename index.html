@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Gerador de Etiquetas 40x40 - Auto Ajuste</title>
+    <title>Gerador de Etiquetas 40x40 - Recheios Completos</title>
     <style>
         :root { --primary: #6366f1; --bg: #f0f2f5; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; display: flex; margin: 0; background: var(--bg); height: 100vh; }
@@ -29,7 +29,7 @@
             width: 40mm; height: 40mm; padding: 2mm; box-sizing: border-box;
             display: flex; flex-direction: column; background: white; overflow: hidden;
             border: 1px solid #000; position: relative; line-height: 1.1;
-            word-break: break-word; /* Quebra automática de palavras longas */
+            word-break: break-word;
         }
 
         .layout-bolo { height: 100%; display: flex; flex-direction: column; justify-content: space-between; text-align: center; }
@@ -51,7 +51,7 @@
 
 <div class="editor">
     <div class="card">
-        <h3>✍️ Editor Profissional</h3>
+        <h3>✍️ Editor Profissional 40x40</h3>
         
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
             <div><label>Fonte</label>
@@ -75,27 +75,34 @@
 
         <label>Modelo</label>
         <select id="tipo" onchange="update()">
+            <option value="bolo">Estrutura de Bolo</option>
             <option value="completa">Ingredientes (Auto-Ajuste)</option>
             <option value="texto">Texto Livre</option>
-            <option value="bolo">Estrutura de Bolo</option>
         </select>
 
-        <div id="grupoCompleta">
+        <div id="grupoBolo">
+            <label>Massa</label>
+            <select id="massa" onchange="update()">
+                <option>BOLO BRANCO</option>
+                <option>BOLO DE CHOCOLATE</option>
+                <option>BOLO MESCLADO</option>
+            </select>
+            <label>Recheio 1 (Meio)</label>
+            <select id="recheio1" onchange="update()"></select>
+            <label>Recheio 2 (Baixo)</label>
+            <select id="recheio2" onchange="update()"></select>
+        </div>
+
+        <div id="grupoCompleta" style="display:none">
             <label>Nome do Produto</label>
             <input id="titulo" placeholder="Ex: Bolo de Pote" oninput="update()">
-            <label>Ingredientes (Quebra automática)</label>
-            <textarea id="ingredientes" rows="4" placeholder="Açúcar, farinha, leite..." oninput="update()"></textarea>
+            <label>Ingredientes</label>
+            <textarea id="ingredientes" rows="4" placeholder="Açúcar, farinha..." oninput="update()"></textarea>
         </div>
 
         <div id="grupoTexto" style="display:none">
             <label>Conteúdo</label>
             <textarea id="texto" rows="3" oninput="update()"></textarea>
-        </div>
-
-        <div id="grupoBolo" style="display:none">
-            <label>Massa</label><input id="massa" value="BOLO BRANCO" oninput="update()">
-            <label>Recheio 1</label><input id="recheio1" value="BRIGADEIRO" oninput="update()">
-            <label>Recheio 2</label><input id="recheio2" value="NINHO" oninput="update()">
         </div>
 
         <button class="btn btn-save" onclick="salvar()">💾 Salvar Etiqueta</button>
@@ -112,7 +119,36 @@
 </aside>
 
 <script>
+// LISTA ATUALIZADA DE RECHEIOS
+const recheios = [
+    "(NENHUM)",
+    "LEITE CONDENSADO",
+    "LEITE CONDENSADO COM COCO",
+    "LEITE CONDENSADO COM ABACAXI",
+    "LEITE CONDENSADO COM MORANGO",
+    "LEITE CONDENSADO COM PESSEGO",
+    "LEITE CONDENSADO COM AMEIXA",
+    "BRIGADEIRO",
+    "CREME",
+    "MOUSSE CHOCOLATE",
+    "MOUSSE DE LEITE NINHO",
+    "MOUSSE DE MORANGO",
+    "MOUSSE DE MARACUJÁ",
+    "MOUSSE DE 4 LEITES",
+    "LEITE CONDENSADO COM ABACAXI E COCO",
+    "FLORESTA NEGRA"
+];
+
 let styles = { bold: false, italic: false, align: 'center' };
+
+function carregarRecheios() {
+    const r1 = document.getElementById("recheio1");
+    const r2 = document.getElementById("recheio2");
+    recheios.forEach(r => {
+        r1.innerHTML += `<option value="${r}">${r}</option>`;
+        r2.innerHTML += `<option value="${r}">${r}</option>`;
+    });
+}
 
 function toggleStyle(s) {
     styles[s] = !styles[s];
@@ -128,12 +164,9 @@ function setAlign(a) {
     update();
 }
 
-// Função de ajuste automático de fonte para caber no container
 function autoAjustarFonte(elemento) {
     let tamanho = parseFloat(document.getElementById("fontSize").value);
     elemento.style.fontSize = tamanho + "pt";
-
-    // Reduz a fonte gradualmente enquanto o conteúdo for maior que o container (40mm)
     while (elemento.scrollHeight > elemento.clientHeight && tamanho > 6) {
         tamanho -= 0.5;
         elemento.style.fontSize = tamanho + "pt";
@@ -143,7 +176,6 @@ function autoAjustarFonte(elemento) {
 function criarEtiquetaHTML() {
     const tipo = document.getElementById("tipo").value;
     const font = document.getElementById("fontFamily").value;
-    const size = document.getElementById("fontSize").value;
 
     const div = document.createElement("div");
     div.className = "label";
@@ -152,13 +184,27 @@ function criarEtiquetaHTML() {
     div.style.fontWeight = styles.bold ? "bold" : "normal";
     div.style.fontStyle = styles.italic ? "italic" : "normal";
 
-    if (tipo === "completa") {
+    if (tipo === "bolo") {
+        div.innerHTML = `
+            <div id="container-ajuste" class="layout-bolo">
+                <div style="font-size:1.1em; border-bottom: 1px solid #eee; padding-bottom: 2px;">
+                    ${document.getElementById("massa").value}
+                </div>
+                <div style="font-weight:normal; flex:1; display:flex; align-items:center; justify-content:center;">
+                    ${document.getElementById("recheio1").value !== '(NENHUM)' ? document.getElementById("recheio1").value : ''}
+                </div>
+                <div style="font-size:0.9em; border-top: 1px solid #eee; padding-top: 2px;">
+                    ${document.getElementById("recheio2").value !== '(NENHUM)' ? document.getElementById("recheio2").value : ''}
+                </div>
+            </div>`;
+    } 
+    else if (tipo === "completa") {
         div.innerHTML = `
             <div style="font-weight:bold; border-bottom:1px solid #000; margin-bottom:2px; font-size:1.1em;">
                 ${document.getElementById("titulo").value.toUpperCase() || 'PRODUTO'}
             </div>
             <div id="container-ajuste" style="flex:1; overflow:hidden; display:flex; flex-direction:column; justify-content:flex-start;">
-                <span id="texto-ingredientes">${document.getElementById("ingredientes").value || 'Ingredientes...'}</span>
+                <span>${document.getElementById("ingredientes").value || 'Ingredientes...'}</span>
             </div>
             <div class="alert">ALÉRGICOS: CONTÉM LEITE E TRIGO</div>
             <div class="alert">ALTO EM: GORDURA SATURADA</div>`;
@@ -167,17 +213,8 @@ function criarEtiquetaHTML() {
         div.innerHTML = `<div id="container-ajuste" style="height:100%; display:flex; flex-direction:column; justify-content:center;">
             ${document.getElementById("texto").value.split(/\n|,/).map(l => `<div>${l.trim().toUpperCase()}</div>`).join("")}
         </div>`;
-    } 
-    else if (tipo === "bolo") {
-        div.innerHTML = `
-            <div id="container-ajuste" class="layout-bolo">
-                <div style="font-size:1.1em;">${document.getElementById("massa").value.toUpperCase()}</div>
-                <div style="font-weight:normal;">${document.getElementById("recheio1").value.toUpperCase()}</div>
-                <div style="font-size:0.9em;">${document.getElementById("recheio2").value.toUpperCase()}</div>
-            </div>`;
     }
 
-    // Executa o ajuste após o elemento ser inserido no DOM (via update)
     setTimeout(() => {
         const target = div.querySelector("#container-ajuste");
         if(target) autoAjustarFonte(target);
@@ -198,9 +235,9 @@ function update() {
 }
 
 function salvar() {
-    const n = prompt("Nome do modelo:", "Etiqueta");
+    const n = prompt("Nome do modelo:", "Etiqueta Bolo");
     if(!n) return;
-    let l = JSON.parse(localStorage.getItem("etq_ajuste")) || [];
+    let l = JSON.parse(localStorage.getItem("etq_bolo_v4")) || [];
     l.push({
         id: Date.now(), nome: n, tipo: document.getElementById("tipo").value,
         texto: document.getElementById("texto").value,
@@ -211,12 +248,12 @@ function salvar() {
         recheio2: document.getElementById("recheio2").value,
         config: { ...styles, font: document.getElementById("fontFamily").value, size: document.getElementById("fontSize").value }
     });
-    localStorage.setItem("etq_ajuste", JSON.stringify(l));
+    localStorage.setItem("etq_bolo_v4", JSON.stringify(l));
     carregar();
 }
 
 function carregar() {
-    const l = JSON.parse(localStorage.getItem("etq_ajuste")) || [];
+    const l = JSON.parse(localStorage.getItem("etq_bolo_v4")) || [];
     const d = document.getElementById("listaSalvos");
     d.innerHTML = "";
     l.reverse().forEach(i => {
@@ -228,9 +265,9 @@ function carregar() {
             document.getElementById("texto").value = i.texto || "";
             document.getElementById("titulo").value = i.titulo || "";
             document.getElementById("ingredientes").value = i.ingredientes || "";
-            document.getElementById("massa").value = i.massa || "";
-            document.getElementById("recheio1").value = i.recheio1 || "";
-            document.getElementById("recheio2").value = i.recheio2 || "";
+            document.getElementById("massa").value = i.massa || "BOLO BRANCO";
+            document.getElementById("recheio1").value = i.recheio1 || "(NENHUM)";
+            document.getElementById("recheio2").value = i.recheio2 || "(NENHUM)";
             document.getElementById("fontFamily").value = i.config.font;
             document.getElementById("fontSize").value = i.config.size;
             styles = { bold: i.config.bold, italic: i.config.italic, align: i.config.align };
@@ -242,13 +279,13 @@ function carregar() {
 
 function excluir(id, e) {
     e.stopPropagation();
-    let l = JSON.parse(localStorage.getItem("etq_ajuste")).filter(i => i.id !== id);
-    localStorage.setItem("etq_ajuste", JSON.stringify(l));
+    let l = JSON.parse(localStorage.getItem("etq_bolo_v4")).filter(i => i.id !== id);
+    localStorage.setItem("etq_bolo_v4", JSON.stringify(l));
     carregar();
 }
 
 function imprimir() {
-    const q = prompt("Quantidade de etiquetas:", "1");
+    const q = prompt("Quantidade:", "1");
     if(!q) return;
     const a = document.getElementById("printArea");
     a.innerHTML = "";
@@ -256,7 +293,7 @@ function imprimir() {
     setTimeout(() => window.print(), 800);
 }
 
-carregar(); update();
+carregarRecheios(); carregar(); update();
 </script>
 </body>
 </html>
