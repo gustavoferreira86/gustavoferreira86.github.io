@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Etiquetas 40x40</title>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        background: #f5f5f5;
+    }
+
+    .controls {
+        margin-bottom: 20px;
+    }
+
+    textarea {
+        width: 100%;
+        height: 120px;
+    }
+
+    button {
+        margin-top: 10px;
+        padding: 10px;
+        cursor: pointer;
+    }
+
+    /* Área de impressão */
+    .print-area {
+        display: grid;
+        grid-template-columns: repeat(5, 40mm);
+        gap: 5mm;
+    }
+
+    .label {
+        width: 40mm;
+        height: 40mm;
+        border: 1px solid #000;
+        padding: 3mm;
+        box-sizing: border-box;
+        font-size: 8pt;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        background: white;
+    }
+
+    .alert {
+        background: black;
+        color: white;
+        font-weight: bold;
+        text-align: center;
+        padding: 2px;
+        font-size: 7pt;
+    }
+
+    .small {
+        font-size: 7pt;
+    }
+
+    @media print {
+        body {
+            background: white;
+        }
+        .controls {
+            display: none;
+        }
+    }
+</style>
+</head>
+
+<body>
+
+<h2>Gerador de Etiquetas 40x40</h2>
+
+<div class="controls">
+    <label>Ingredientes:</label>
+    <textarea id="ingredientes"></textarea>
+
+    <br>
+
+    <button onclick="gerarEtiqueta()">Gerar Etiquetas</button>
+    <button onclick="salvar()">Salvar</button>
+    <button onclick="carregar()">Carregar</button>
+    <button onclick="gerarIA()">Gerar com IA</button>
+    <button onclick="window.print()">Imprimir</button>
+</div>
+
+<div class="print-area" id="printArea"></div>
+
+<script>
+function gerarEtiqueta() {
+    const texto = document.getElementById("ingredientes").value;
+
+    const area = document.getElementById("printArea");
+    area.innerHTML = "";
+
+    for (let i = 0; i < 20; i++) {
+        const div = document.createElement("div");
+        div.className = "label";
+
+        div.innerHTML = `
+            <div class="small">
+                <b>Ingredientes:</b> ${texto}
+            </div>
+
+            <div class="alert">
+                ALÉRGICOS: CONTÉM<br>
+                TRIGO, SOJA,<br>
+                LEITE E OVOS
+            </div>
+
+            <div class="alert">
+                ALTO EM:<br>
+                GORDURA SATURADA
+            </div>
+        `;
+
+        area.appendChild(div);
+    }
+}
+
+// Salvar no navegador
+function salvar() {
+    localStorage.setItem("etiqueta", document.getElementById("ingredientes").value);
+    alert("Salvo!");
+}
+
+// Carregar
+function carregar() {
+    document.getElementById("ingredientes").value = localStorage.getItem("etiqueta") || "";
+}
+
+// Simulação IA (você pode integrar com API depois)
+async function gerarIA() {
+    const prompt = prompt("Descreva o produto (ex: bolo de chocolate):");
+
+    if (!prompt) return;
+
+    // Aqui você pode trocar por API real (OpenAI, etc)
+    const resultado = `
+Farinha de trigo enriquecida, açúcar, ovos, leite integral,
+chocolate em pó, manteiga, fermento químico e aroma idêntico ao natural.
+`;
+
+    document.getElementById("ingredientes").value = resultado;
+}
+</script>
+
+</body>
+</html>
