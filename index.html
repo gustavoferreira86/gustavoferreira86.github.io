@@ -2,45 +2,38 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Gerador de Etiquetas 40x40 - Editor Pró</title>
+    <title>Gerador de Etiquetas 40x40 - Auto Ajuste</title>
     <style>
         :root { --primary: #6366f1; --bg: #f0f2f5; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; display: flex; margin: 0; background: var(--bg); height: 100vh; }
 
-        /* Painéis */
+        /* Interface */
         .editor { flex: 1; padding: 20px; overflow-y: auto; }
         .sidebar { width: 320px; background: white; border-left: 1px solid #ddd; padding: 20px; overflow-y: auto; }
         .card { background: white; padding: 15px; margin-bottom: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         
-        /* Controles */
         label { display: block; font-size: 11px; font-weight: bold; color: #666; margin-top: 10px; text-transform: uppercase; }
         input, textarea, select { width: 100%; padding: 8px; margin-top: 4px; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; font-size: 14px; }
         
-        .toolbar { display: flex; gap: 5px; margin-top: 10px; flex-wrap: wrap; }
-        .tool-btn { flex: 1; padding: 8px; border: 1px solid #ccc; background: white; cursor: pointer; border-radius: 4px; font-weight: bold; }
+        .toolbar { display: flex; gap: 5px; margin-top: 10px; background: #eee; padding: 8px; border-radius: 8px; }
+        .tool-btn { padding: 6px 12px; border: 1px solid #bbb; background: white; cursor: pointer; border-radius: 4px; font-weight: bold; }
         .tool-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-
+        
         .btn { padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; width: 100%; transition: 0.2s; }
         .btn-save { background: #10b981; color: white; }
         .btn-print { background: #111; color: white; }
 
         /* Etiqueta 40x40 */
-        #preview-container { display: flex; justify-content: center; padding: 20px; background: #e2e8f0; border-radius: 8px; }
+        #preview-container { display: flex; justify-content: center; padding: 20px; background: #d1d5db; border-radius: 8px; margin-top: 10px; }
         .label {
             width: 40mm; height: 40mm; padding: 2mm; box-sizing: border-box;
             display: flex; flex-direction: column; background: white; overflow: hidden;
-            border: 1px solid #000; position: relative; line-height: 1.2;
+            border: 1px solid #000; position: relative; line-height: 1.1;
+            word-break: break-word; /* Quebra automática de palavras longas */
         }
 
-        /* Layouts de Conteúdo */
-        .content-texto { height: 100%; display: flex; flex-direction: column; }
-        .content-bolo { height: 100%; display: flex; flex-direction: column; justify-content: space-between; }
-        .completa { font-size: 8pt; justify-content: space-between; }
-        .alert { background: black; color: white; text-align: center; font-weight: bold; padding: 1px; font-size: 7pt; margin-top: 1px; }
-
-        /* Estilos de Texto Dinâmicos */
-        .bold { font-weight: bold; }
-        .italic { font-style: italic; }
+        .layout-bolo { height: 100%; display: flex; flex-direction: column; justify-content: space-between; text-align: center; }
+        .alert { background: black; color: white; text-align: center; font-weight: bold; padding: 1px; font-size: 7pt; margin-top: 1px; width: 100%; }
 
         @media print {
             @page { size: 40mm 40mm; margin: 0; }
@@ -50,7 +43,6 @@
             .label { border: none !important; page-break-after: always; }
         }
 
-        /* Lista de Salvos */
         .item-salvo { background: #f9f9f9; padding: 10px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 8px; cursor: pointer; position: relative; }
         .btn-del { background: #ff4d4d; color: white; border: none; padding: 2px 6px; border-radius: 4px; position: absolute; right: 5px; top: 5px; cursor: pointer; }
     </style>
@@ -59,235 +51,212 @@
 
 <div class="editor">
     <div class="card">
-        <h3>🎨 Editor de Etiquetas</h3>
+        <h3>✍️ Editor Profissional</h3>
         
-        <label>Tipo e Fonte</label>
-        <div style="display: grid; grid-template-columns: 1.5fr 1fr 0.8fr; gap: 8px;">
-            <select id="tipo" onchange="update()">
-                <option value="texto">Texto Livre</option>
-                <option value="completa">Ingredientes</option>
-                <option value="bolo">Montagem Bolo</option>
-            </select>
-            <select id="fontFamily" onchange="update()">
-                <option value="Arial">Arial</option>
-                <option value="'Courier New'">Courier (Rústica)</option>
-                <option value="'Times New Roman'">Times</option>
-                <option value="Verdana">Verdana</option>
-                <option value="Impact">Impact</option>
-            </select>
-            <input type="number" id="fontSize" value="14" oninput="update()">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div><label>Fonte</label>
+                <select id="fontFamily" onchange="update()">
+                    <option value="Arial">Arial</option>
+                    <option value="Verdana">Verdana</option>
+                    <option value="Impact">Impact</option>
+                </select>
+            </div>
+            <div><label>Tam. Inicial</label>
+                <input type="number" id="fontSize" value="12" oninput="update()">
+            </div>
         </div>
 
         <div class="toolbar">
             <button class="tool-btn" id="btnBold" onclick="toggleStyle('bold')">B</button>
             <button class="tool-btn" id="btnItalic" onclick="toggleStyle('italic')">I</button>
-            <button class="tool-btn" onclick="setAlignment('left')">⇐</button>
-            <button class="tool-btn active" id="alignCenter" onclick="setAlignment('center')">⇔</button>
-            <button class="tool-btn" onclick="setAlignment('right')">⇒</button>
+            <button class="tool-btn" id="alignL" onclick="setAlign('left')">⇐</button>
+            <button class="tool-btn active" id="alignC" onclick="setAlign('center')">⇔</button>
         </div>
 
-        <label><input type="checkbox" id="truncar" onchange="update()"> Truncar/Abreviar (L. Cond, Choc...)</label>
+        <label>Modelo</label>
+        <select id="tipo" onchange="update()">
+            <option value="completa">Ingredientes (Auto-Ajuste)</option>
+            <option value="texto">Texto Livre</option>
+            <option value="bolo">Estrutura de Bolo</option>
+        </select>
 
-        <div id="grupoTexto">
-            <label>Texto da Etiqueta</label>
-            <textarea id="texto" placeholder="Texto livre..." oninput="update()"></textarea>
-        </div>
-
-        <div id="grupoCompleta" style="display:none">
+        <div id="grupoCompleta">
             <label>Nome do Produto</label>
-            <input id="titulo" placeholder="Título" oninput="update()">
-            <label>Ingredientes</label>
-            <textarea id="ingredientes" placeholder="Ingredientes..." oninput="update()"></textarea>
+            <input id="titulo" placeholder="Ex: Bolo de Pote" oninput="update()">
+            <label>Ingredientes (Quebra automática)</label>
+            <textarea id="ingredientes" rows="4" placeholder="Açúcar, farinha, leite..." oninput="update()"></textarea>
+        </div>
+
+        <div id="grupoTexto" style="display:none">
+            <label>Conteúdo</label>
+            <textarea id="texto" rows="3" oninput="update()"></textarea>
         </div>
 
         <div id="grupoBolo" style="display:none">
-            <label>Massa (Topo)</label>
-            <select id="massa" onchange="update()">
-                <option>BOLO BRANCO</option><option>BOLO DE CHOCOLATE</option><option>BOLO RED VELVET</option>
-            </select>
-            <label>Recheio 1 (Meio)</label>
-            <select id="recheio1" onchange="update()"></select>
-            <label>Recheio 2 (Baixo)</label>
-            <select id="recheio2" onchange="update()"></select>
+            <label>Massa</label><input id="massa" value="BOLO BRANCO" oninput="update()">
+            <label>Recheio 1</label><input id="recheio1" value="BRIGADEIRO" oninput="update()">
+            <label>Recheio 2</label><input id="recheio2" value="NINHO" oninput="update()">
         </div>
 
         <button class="btn btn-save" onclick="salvar()">💾 Salvar Etiqueta</button>
-        <button class="btn btn-print" onclick="imprimir()">🖨️ Imprimir Etiquetas</button>
+        <button class="btn btn-print" onclick="imprimir()">🖨️ Imprimir (Térmica)</button>
     </div>
 
-    <div id="preview-container">
-        <div id="preview"></div>
-    </div>
-    
+    <div id="preview-container"><div id="preview"></div></div>
     <div id="printArea"></div>
 </div>
 
 <aside class="sidebar">
-    <h3>📂 Etiquetas Salvas</h3>
+    <h3>📂 Biblioteca</h3>
     <div id="listaSalvos"></div>
 </aside>
 
 <script>
-const recheios = ["(NENHUM)", "LEITE CONDENSADO","BRIGADEIRO","MOUSSE MARACUJÁ","NINHO","DOCE DE LEITE","MORANGO"];
-let currentStyles = { bold: false, italic: false, align: 'center' };
+let styles = { bold: false, italic: false, align: 'center' };
 
-function carregarRecheios() {
-    const r1 = document.getElementById("recheio1");
-    const r2 = document.getElementById("recheio2");
-    recheios.forEach(r => {
-        r1.innerHTML += `<option>${r}</option>`;
-        r2.innerHTML += `<option>${r}</option>`;
-    });
-}
-
-function toggleStyle(style) {
-    currentStyles[style] = !currentStyles[style];
-    document.getElementById(style === 'bold' ? 'btnBold' : 'btnItalic').classList.toggle('active');
+function toggleStyle(s) {
+    styles[s] = !styles[s];
+    document.getElementById('btnBold').classList.toggle('active', styles.bold);
+    document.getElementById('btnItalic').classList.toggle('active', styles.italic);
     update();
 }
 
-function setAlignment(align) {
-    currentStyles.align = align;
-    document.querySelectorAll('.toolbar .tool-btn').forEach(b => b.classList.remove('active'));
-    // Simplificação: apenas visual
+function setAlign(a) {
+    styles.align = a;
+    document.getElementById('alignL').classList.toggle('active', a === 'left');
+    document.getElementById('alignC').classList.toggle('active', a === 'center');
     update();
 }
 
-function aplicarAbreviacoes(texto) {
-    return texto.toUpperCase()
-        .replace(/LEITE CONDENSADO/g, "L. COND.")
-        .replace(/CONDENSADO/g, "COND.")
-        .replace(/MARACUJÁ/g, "MARAC.")
-        .replace(/CHOCOLATE/g, "CHOC.");
+// Função de ajuste automático de fonte para caber no container
+function autoAjustarFonte(elemento) {
+    let tamanho = parseFloat(document.getElementById("fontSize").value);
+    elemento.style.fontSize = tamanho + "pt";
+
+    // Reduz a fonte gradualmente enquanto o conteúdo for maior que o container (40mm)
+    while (elemento.scrollHeight > elemento.clientHeight && tamanho > 6) {
+        tamanho -= 0.5;
+        elemento.style.fontSize = tamanho + "pt";
+    }
 }
 
 function criarEtiquetaHTML() {
     const tipo = document.getElementById("tipo").value;
     const font = document.getElementById("fontFamily").value;
     const size = document.getElementById("fontSize").value;
-    const truncar = document.getElementById("truncar").checked;
 
     const div = document.createElement("div");
-    div.className = `label ${currentStyles.bold ? 'bold' : ''} ${currentStyles.italic ? 'italic' : ''}`;
+    div.className = "label";
     div.style.fontFamily = font;
-    div.style.fontSize = size + "pt";
-    div.style.textAlign = currentStyles.align;
+    div.style.textAlign = styles.align;
+    div.style.fontWeight = styles.bold ? "bold" : "normal";
+    div.style.fontStyle = styles.italic ? "italic" : "normal";
 
-    if (tipo === "texto") {
-        const lines = document.getElementById("texto").value.split(/\n|,/);
-        div.innerHTML = `<div class="content-texto" style="justify-content: center;">
-            ${lines.map(l => `<div>${l.trim().toUpperCase()}</div>`).join("")}
-        </div>`;
-    } 
-    else if (tipo === "completa") {
-        div.classList.add("completa");
+    if (tipo === "completa") {
         div.innerHTML = `
-            <div><b>${document.getElementById("titulo").value.toUpperCase()}</b></div>
-            <div style="flex-grow:1; font-size: 0.9em;">${document.getElementById("ingredientes").value}</div>
-            <div class="alert">CONTÉM GLÚTEN / LACTOSE</div>
+            <div style="font-weight:bold; border-bottom:1px solid #000; margin-bottom:2px; font-size:1.1em;">
+                ${document.getElementById("titulo").value.toUpperCase() || 'PRODUTO'}
+            </div>
+            <div id="container-ajuste" style="flex:1; overflow:hidden; display:flex; flex-direction:column; justify-content:flex-start;">
+                <span id="texto-ingredientes">${document.getElementById("ingredientes").value || 'Ingredientes...'}</span>
+            </div>
+            <div class="alert">ALÉRGICOS: CONTÉM LEITE E TRIGO</div>
             <div class="alert">ALTO EM: GORDURA SATURADA</div>`;
     } 
+    else if (tipo === "texto") {
+        div.innerHTML = `<div id="container-ajuste" style="height:100%; display:flex; flex-direction:column; justify-content:center;">
+            ${document.getElementById("texto").value.split(/\n|,/).map(l => `<div>${l.trim().toUpperCase()}</div>`).join("")}
+        </div>`;
+    } 
     else if (tipo === "bolo") {
-        const m = document.getElementById("massa").value;
-        const r1 = document.getElementById("recheio1").value;
-        const r2 = document.getElementById("recheio2").value;
         div.innerHTML = `
-            <div class="content-bolo">
-                <div>${m}</div>
-                <div style="font-weight:normal; font-size:0.85em">${r1 !== '(NENHUM)' ? r1 : ''}</div>
-                <div style="font-weight:normal; font-size:0.85em">${r2 !== '(NENHUM)' ? r2 : ''}</div>
+            <div id="container-ajuste" class="layout-bolo">
+                <div style="font-size:1.1em;">${document.getElementById("massa").value.toUpperCase()}</div>
+                <div style="font-weight:normal;">${document.getElementById("recheio1").value.toUpperCase()}</div>
+                <div style="font-size:0.9em;">${document.getElementById("recheio2").value.toUpperCase()}</div>
             </div>`;
     }
 
-    if (truncar) {
-        setTimeout(() => {
-            if (div.scrollHeight > div.clientHeight) {
-                div.querySelectorAll('div').forEach(el => el.innerText = aplicarAbreviacoes(el.innerText));
-            }
-            while (div.scrollHeight > div.clientHeight) {
-                let txt = div.innerText.split(/\s+/);
-                if(txt.length <= 1) break;
-                txt.pop();
-                div.innerText = txt.join(" ") + "...";
-            }
-        }, 0);
-    }
+    // Executa o ajuste após o elemento ser inserido no DOM (via update)
+    setTimeout(() => {
+        const target = div.querySelector("#container-ajuste");
+        if(target) autoAjustarFonte(target);
+    }, 0);
+
     return div;
 }
 
 function update() {
-    const tipo = document.getElementById("tipo").value;
-    document.getElementById("grupoTexto").style.display = tipo === "texto" ? "block" : "none";
-    document.getElementById("grupoCompleta").style.display = tipo === "completa" ? "block" : "none";
-    document.getElementById("grupoBolo").style.display = tipo === "bolo" ? "block" : "none";
+    const t = document.getElementById("tipo").value;
+    document.getElementById("grupoTexto").style.display = t === "texto" ? "block" : "none";
+    document.getElementById("grupoCompleta").style.display = t === "completa" ? "block" : "none";
+    document.getElementById("grupoBolo").style.display = t === "bolo" ? "block" : "none";
     
-    const preview = document.getElementById("preview");
-    preview.innerHTML = "";
-    preview.appendChild(criarEtiquetaHTML());
+    const prev = document.getElementById("preview");
+    prev.innerHTML = "";
+    prev.appendChild(criarEtiquetaHTML());
 }
 
 function salvar() {
-    const nome = prompt("Nome desta configuração:", "Etiqueta " + new Date().toLocaleTimeString());
-    if (!nome) return;
-    let lista = JSON.parse(localStorage.getItem("etq_pro")) || [];
-    lista.push({
-        id: Date.now(), nome, tipo: document.getElementById("tipo").value,
+    const n = prompt("Nome do modelo:", "Etiqueta");
+    if(!n) return;
+    let l = JSON.parse(localStorage.getItem("etq_ajuste")) || [];
+    l.push({
+        id: Date.now(), nome: n, tipo: document.getElementById("tipo").value,
         texto: document.getElementById("texto").value,
         titulo: document.getElementById("titulo").value,
         ingredientes: document.getElementById("ingredientes").value,
         massa: document.getElementById("massa").value,
-        r1: document.getElementById("recheio1").value,
-        r2: document.getElementById("recheio2").value,
-        styles: {...currentStyles},
-        font: document.getElementById("fontFamily").value,
-        size: document.getElementById("fontSize").value
+        recheio1: document.getElementById("recheio1").value,
+        recheio2: document.getElementById("recheio2").value,
+        config: { ...styles, font: document.getElementById("fontFamily").value, size: document.getElementById("fontSize").value }
     });
-    localStorage.setItem("etq_pro", JSON.stringify(lista));
-    carregarLista();
+    localStorage.setItem("etq_ajuste", JSON.stringify(l));
+    carregar();
 }
 
-function carregarLista() {
-    const lista = JSON.parse(localStorage.getItem("etq_pro")) || [];
-    const div = document.getElementById("listaSalvos");
-    div.innerHTML = "";
-    lista.reverse().forEach(item => {
+function carregar() {
+    const l = JSON.parse(localStorage.getItem("etq_ajuste")) || [];
+    const d = document.getElementById("listaSalvos");
+    d.innerHTML = "";
+    l.reverse().forEach(i => {
         const el = document.createElement("div");
         el.className = "item-salvo";
-        el.innerHTML = `<strong>${item.nome}</strong><button class="btn-del" onclick="excluir(${item.id}, event)">×</button>`;
+        el.innerHTML = `<strong>${i.nome}</strong><button class="btn-del" onclick="excluir(${i.id}, event)">×</button>`;
         el.onclick = () => {
-            document.getElementById("tipo").value = item.tipo;
-            document.getElementById("texto").value = item.texto;
-            document.getElementById("titulo").value = item.titulo;
-            document.getElementById("ingredientes").value = item.ingredientes;
-            document.getElementById("massa").value = item.massa;
-            document.getElementById("recheio1").value = item.r1;
-            document.getElementById("recheio2").value = item.r2;
-            document.getElementById("fontFamily").value = item.font || "Arial";
-            document.getElementById("fontSize").value = item.size || 14;
-            currentStyles = item.styles || {bold:false, italic:false, align:'center'};
+            document.getElementById("tipo").value = i.tipo;
+            document.getElementById("texto").value = i.texto || "";
+            document.getElementById("titulo").value = i.titulo || "";
+            document.getElementById("ingredientes").value = i.ingredientes || "";
+            document.getElementById("massa").value = i.massa || "";
+            document.getElementById("recheio1").value = i.recheio1 || "";
+            document.getElementById("recheio2").value = i.recheio2 || "";
+            document.getElementById("fontFamily").value = i.config.font;
+            document.getElementById("fontSize").value = i.config.size;
+            styles = { bold: i.config.bold, italic: i.config.italic, align: i.config.align };
             update();
         };
-        div.appendChild(el);
+        d.appendChild(el);
     });
 }
 
 function excluir(id, e) {
     e.stopPropagation();
-    let lista = JSON.parse(localStorage.getItem("etq_pro")).filter(i => i.id !== id);
-    localStorage.setItem("etq_pro", JSON.stringify(lista));
-    carregarLista();
+    let l = JSON.parse(localStorage.getItem("etq_ajuste")).filter(i => i.id !== id);
+    localStorage.setItem("etq_ajuste", JSON.stringify(l));
+    carregar();
 }
 
 function imprimir() {
-    const qtd = prompt("Quantas etiquetas imprimir?", "1");
-    if (!qtd) return;
-    const area = document.getElementById("printArea");
-    area.innerHTML = "";
-    for (let i = 0; i < qtd; i++) { area.appendChild(criarEtiquetaHTML()); }
-    setTimeout(() => window.print(), 600);
+    const q = prompt("Quantidade de etiquetas:", "1");
+    if(!q) return;
+    const a = document.getElementById("printArea");
+    a.innerHTML = "";
+    for(let i=0; i<q; i++) { a.appendChild(criarEtiquetaHTML()); }
+    setTimeout(() => window.print(), 800);
 }
 
-carregarRecheios(); carregarLista(); update();
+carregar(); update();
 </script>
 </body>
 </html>
