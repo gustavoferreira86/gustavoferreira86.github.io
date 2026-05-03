@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Suporte - Anti-Procrastinação App</title>
+  <meta name="description" content="Página oficial de suporte do Anti-Procrastinação App.">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f7fb;
+      color: #333;
+    }
+
+    header {
+      background: linear-gradient(135deg, #4a00e0, #8e2de2);
+      color: white;
+      padding: 40px 20px;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2.2rem;
+    }
+
+    header p {
+      margin-top: 10px;
+      font-size: 1.1rem;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      padding: 30px 20px;
+    }
+
+    .card {
+      background: white;
+      padding: 25px;
+      margin-bottom: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+
+    h2 {
+      color: #4a00e0;
+    }
+
+    a {
+      color: #4a00e0;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    ul {
+      padding-left: 20px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      background-color: #eee;
+      font-size: 0.9rem;
+    }
+
+    .email-box {
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Suporte - Anti-Procrastinação App</h1>
+    <p>Estamos aqui para ajudar você a focar mais e procrastinar menos 🚀</p>
+  </header>
+
+  <div class="container">
+
+    <div class="card">
+      <h2>Contato</h2>
+      <p>Se você tiver dúvidas, problemas técnicos, sugestões ou precisar de ajuda com o aplicativo, entre em contato conosco:</p>
+      <p class="email-box">📧 lgustavoferreira@gmail.com</p>
+    </div>
+
+    <div class="card">
+      <h2>Perguntas Frequentes (FAQ)</h2>
+
+      <p><strong>1. Como adicionar uma nova tarefa?</strong></p>
+      <p>Abra o app e toque no botão para adicionar tarefas na tela principal.</p>
+
+      <p><strong>2. Como funcionam as tarefas recorrentes?</strong></p>
+      <p>Você pode configurar tarefas diárias, semanais, mensais ou anuais para criar hábitos consistentes.</p>
+
+      <p><strong>3. Não estou recebendo notificações.</strong></p>
+      <p>Verifique nas configurações do seu celular se as notificações do app estão ativadas.</p>
+
+      <p><strong>4. Posso recuperar tarefas excluídas?</strong></p>
+      <p>No momento, tarefas excluídas não podem ser restauradas.</p>
+    </div>
+
+    <div class="card">
+      <h2>Relatar Problemas</h2>
+      <p>Ao enviar um problema, inclua:</p>
+      <ul>
+        <li>Modelo do seu dispositivo</li>
+        <li>Versão do sistema operacional</li>
+        <li>Descrição detalhada do erro</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Política de Privacidade</h2>
+      <p>Respeitamos sua privacidade. Para mais informações sobre coleta e uso de dados, consulte nossa Política de Privacidade.</p>
+    </div>
+
+  </div>
+
+  <footer>
+    © 2026 Gustavo Ferreira - Anti-Procrastinação App
+  </footer>
+
+</body>
+</html>
